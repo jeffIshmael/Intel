@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+datasource db {
+  provider  = "postgresql"
+  url  	   = env("DATABASE_URL")
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  name  String?
+  address String @unique
+  privateKey String
+  passPhrase String
+  password String
+  aiBalance BigInt @default(0)
+  pools Pool[]
+  staked Boolean @default(false)
+  notifications Notification[]
+  transactions Transaction[]
+}
+
+model Notification {
+  id        Int     @id @default(autoincrement())
+  title     String
+  content   String?
+  receiver    User    @relation(fields: [receiverId], references: [id])
+  receiverId  Int
+}
+
+model Transaction {
+  id  Int @id @default(autoincrement())
+  txHash String
+  message String
+  amount  Int
+  time DateTime @updatedAt
+  sender User  @relation(fields: [senderId], references: [id])
+  senderId Int
+}
+
+model Pool {
+  id           Int      @id @default(autoincrement())
+  name         String
+  poolSpec     String
+  amountStaked BigInt  @default(0)  // Using BigInt for large numbers
+  staker       User    @relation(fields: [stakerId], references: [id])
+  stakerId     Int
+  createdAt    DateTime @default(now())  // Timestamp for tracking
+}
