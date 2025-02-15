@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { FaBell, FaExchangeAlt, FaRegCopy, FaHome } from "react-icons/fa";
+import { FaBell,  FaRegCopy, FaHome } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import StakeModal from "./StakeModal";
 import TransferModal from "./TransferModal";
@@ -67,7 +67,7 @@ interface User {
 }
 
 const WholeDashboard = () => {
-  const [showDropdown, setShowDropdown] = useState(false);
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [stakingPools, setStakingPools] = useState<Pool[]>([]);
@@ -79,12 +79,13 @@ const WholeDashboard = () => {
   const [stakedPool, setStakedPool] = useState("");
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
   const [amountStaked, setAmountStaked] = useState(0);
-  const { data: session, status } = useSession();
-  const { data: balance, isLoading } = useReadContract({
+  const { data: session } = useSession();
+  const { data: balance } = useReadContract({
     contract,
     method: "function balanceOf(address) returns (uint256)",
-    params: [user?.address!!], // type safe params
+    params: [user?.address ?? ""], // type safe params
   });
+
 
   async function fetchUser(userId: number) {
     const user = await getUser(userId);
@@ -209,7 +210,7 @@ const WholeDashboard = () => {
 
   const handleStake = async (amount: number, pool: string) => {
     const provider = new ethers.JsonRpcProvider("https://forno.celo.org"); 
-    const privateKey = user?.privateKey!!; 
+    const privateKey = user?.privateKey ?? ""; 
     console.log(privateKey);
     const signer = new ethers.Wallet(privateKey, provider);
     try {
@@ -217,13 +218,13 @@ const WholeDashboard = () => {
       const result = await stakeCUSD(amount, signer);
       if (result) {
         const transaction = await createTransaction(
-          user?.id!!,
+          user?.id ?? 0,
           result.hash,
           "You staked",
           amount
         );
         console.log(pool);
-        await updateStakedPool(user?.id!!, pool, BigInt(amount * 10 ** 18 ));
+        await updateStakedPool(user?.id ?? 0, pool, BigInt(amount * 10 ** 18 ));
         toast.success(
           <>
             Successfully staked.{" "}
@@ -279,7 +280,7 @@ const WholeDashboard = () => {
               title="User Profile"
               className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500 text-white font-semibold text-lg"
             >
-            {((user?.email!!)?.slice(0,1))?.toUpperCase()}
+            {((user?.email ?? "")?.slice(0,1))?.toUpperCase()}
             </div>
             {/* Notification Bell Icon */}
             <FaBell
@@ -377,10 +378,10 @@ const WholeDashboard = () => {
 
         <TransferModal
           balance={Number(balance) / 10 ** 18}
-          aiBalance={Number(user?.aiBalance!!)}
-          address={user?.address!!}
-          userId={user?.id!!?.toString()}
-          poolSpec= {bestPool?.pool!!}
+          aiBalance={Number(user?.aiBalance ?? 0)}
+          address={user?.address ?? ""}
+          userId={(user?.id ?? "defaultId").toString()}
+          poolSpec= {bestPool?.pool ?? ""}
           stake={handleStake}
           
         />
@@ -390,7 +391,7 @@ const WholeDashboard = () => {
           <h1 className="text-xl font-semibold mb-4">Current Staked Pool</h1>
           {user?.staked ? (
             <div className="bg-gray-800 p-5 rounded-lg shadow-md">
-              <h2 className="text-lg font-bold text-green-400">{currentPool?.project!!}</h2>
+              <h2 className="text-lg font-bold text-green-400">{(currentPool?.project) ?? ""}</h2>
 
               <p className="text-sm text-gray-400 mt-1">
                 Annual Percentage Yield (APY)
@@ -435,7 +436,7 @@ const WholeDashboard = () => {
                 if (bestPool?.project === "uniswap-v3") {
                   goToUniswap();
                 } else {
-                  setPoolToStake(bestPool?.pool!!);
+                  setPoolToStake((bestPool?.pool) ?? "");
                   setShowStakingModal(true);
                 }
               }}
@@ -496,7 +497,7 @@ const WholeDashboard = () => {
                       if (pool.project === "uniswap-v3") {
                         goToUniswap();
                       } else {
-                        setPoolToStake(pool.pool!!);
+                        setPoolToStake((pool.pool) ??"");
                         setShowStakingModal(true);
                       }
                     }}

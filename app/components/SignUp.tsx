@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { FaTruckLoading } from "react-icons/fa";
+
 
 const SignUp = ({ onClose }: { onClose: () => void }) => {
   const [signUp, setSignUp] = useState(true);
@@ -39,9 +39,9 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
       toast.success("Login successful!! Redirecting ...");
       setLoading(false);
       router.push("/dashboard"); // Redirect on success
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Oops!Unable to login.");
-      console.log(error.message);
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -69,9 +69,9 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
 
       toast.info("Sign up successful! You can now log in.");
       setSignUp(false); // Switch to login view after successful signup
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("unable to sign up!!");
-      console.log(error.message);
+      console.log(error);
     }
   };
 

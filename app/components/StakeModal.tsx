@@ -48,7 +48,7 @@ const StakeModal = ({
 
         <button
           onClick={() => {
-            setLoading(true);
+            setLoading(showStakingModal);
             handleStake(Number(amount), stakingPool);
             setLoading(false);
           }}

@@ -1,9 +1,10 @@
+import { MetaMaskInpageProvider } from "@metamask/providers";
 import { ethers } from "ethers";
 import React from "react";
 
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum: MetaMaskInpageProvider;
   }
 }
 const Transfer = ({amount, address}:{amount:number, address:string}) => {

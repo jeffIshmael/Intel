@@ -13,7 +13,7 @@ interface User {
     privateKey: string;
   }
 const TransactionHistory = () => {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
@@ -35,7 +35,7 @@ const TransactionHistory = () => {
     // Fetch transaction history from backend or blockchain
     const fetchTransactions = async () => {
       try {
-        const results = await getUserTransactions(user?.id!!); // Update with actual API
+        const results = await getUserTransactions((user?.id) ?? 0); // Update with actual API
         console.log(results);
         setTransactions(results);
       } catch (error) {
@@ -56,13 +56,13 @@ const TransactionHistory = () => {
           {transactions.map((tx, index) => (
             <li key={index} className="border-b last:border-none p-2">
               <p>
-                <strong>Type:</strong> {tx.type}
+                <strong>Type:</strong> 
               </p>
               <p>
-                <strong>Amount:</strong> {tx.amount} cUSD
+                <strong>Amount:</strong>  cUSD
               </p>
               <p>
-                <strong>Date:</strong> {new Date(tx.date).toLocaleString()}
+                <strong>Date:</strong> 
               </p>
             </li>
           ))}

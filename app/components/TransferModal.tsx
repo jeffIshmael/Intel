@@ -61,7 +61,7 @@ export default function TransferModal({
         }
         // Call stake function after transfer
         await stake(Number(amount), poolSpec);
-        const removeBalance = await updateAIBalance(
+         await updateAIBalance(
           Number(userId),
           BigInt(Number(amount) * 10 ** 18),
           true

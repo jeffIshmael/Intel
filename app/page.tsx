@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { FaWallet, FaRocket, FaChartLine } from "react-icons/fa";
+import { FaWallet, FaChartLine } from "react-icons/fa";
 import { getContract } from "thirdweb";
-import { celoAlfajoresTestnet, celo } from "thirdweb/chains";
+import {  celo } from "thirdweb/chains";
 import { useReadContract } from "thirdweb/react";
 import { client } from "@/client/client";
-import { useActiveAccount, useWalletBalance } from "thirdweb/react";
+import { useActiveAccount } from "thirdweb/react";
 import {toast} from "sonner";
 import { ethers } from "ethers";
+import { MetaMaskInpageProvider } from "@metamask/providers";
 
 import Header from "./components/Header";
 import SignUp from "./components/SignUp";
@@ -20,9 +21,10 @@ const contract = getContract({
   chain: celo,
 });
 
+
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum: MetaMaskInpageProvider;
   }
 }
 
@@ -216,6 +218,8 @@ export default function Home() {
       await approveCUSD(amount);
       await checkAllowance();
       const result = await stakeCUSD(amount);
+      console.log(loading);
+      console.log(buttonText);
       toast.success(
         <>
           Successfully staked.{" "}
