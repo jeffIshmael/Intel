@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+![logo](intelLogo.png)
+# Intel
+
+## Introduction
+An AI-driven staking protocol that automatically allocates cUSD into liquidity pools, maximizing returns and fully optimized.
+
+## Problem Statement
+
+In the world of decentralized finance (DeFi), users often face challenges when trying to optimize their staking and liquidity pool allocations. These challenges include:
+- **Complexity**: Manually identifying the best liquidity pools and adjusting stakes requires significant time and expertise.
+- **Risk**: Without proper analysis, users may allocate funds to suboptimal pools, leading to lower returns or increased risks.
+- **Lack of Automation**: Most existing solutions require constant manual intervention, which can be cumbersome and error-prone.
+
+Intel addresses these issues by providing an automated, AI-driven solution that simplifies the process of staking and optimizing yields.
+
+---
+
+## Solution
+
+Intel introduces an **AI-powered yield optimization protocol** specifically designed for the Celo ecosystem. The key features of Intel include:
+- **Automated Allocation**: An intelligent algorithm continuously monitors market conditions and reallocates cUSD across liquidity pools to maximize returns.
+- **Risk Management**: Advanced risk assessment ensures that funds are allocated only to low-risk, high-performance pools.
+- **Real-Time Adjustments**: The AI agent dynamically adjusts allocations based on real-time data, ensuring optimal performance at all times.
+- **User-Friendly Interface**: A simple and intuitive dashboard allows users to track their investments, earnings, and portfolio health effortlessly.
+
+---
+
+## Objectives
+
+The primary objectives of Intel are:
+1. **Maximize Returns**: Ensure users earn the highest possible yields on their cUSD stakes.
+2. **Minimize Risk**: Protect user assets by avoiding volatile or underperforming liquidity pools.
+3. **Simplify Staking**: Provide an easy-to-use platform that eliminates the need for manual intervention.
+4. **Promote Accessibility**: Make advanced yield optimization tools accessible to everyone, regardless of technical expertise.
+
+---
+
+## Technologies Used
+
+ 1. **Frontend:** Nextjs, Tailwind CSS
+ 2. **Blockchain:** Celo
+ 3. **Blockchain integration:** ThirdWeb, Ethers.Js
+ 4. **ORM:** Prisma
+ 5. **API integration:** DeFiLlama API
+
+## Workflow
+
+1. Using the DeFiLlama API, the platform fetchs all Celo-based liquidity pools that support cUSD,.
+2.  A specialized algorithm analyzes and identifies the most profitable pool from the fetched data, optimizing returns.
+3.  AI agents automatically verify whether the user has staked in the best pool. If not, the system executes the stake on behalf of the user, ensuring a hands-free, optimized DeFi experience.
+
+## Demo
+1. To create your Intel account, visit our live website: [https://intel.vercel.app](https://intel.vercel.app).
+2. Watch our video demo here: [Video Link](https://www.youtube.com).
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+Before running the project locally, ensure you have the following installed:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Node.js**: Version 16 or higher.
+- **npm**: Node Package Manager (comes with Node.js).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Steps to Run Locally
+1. Clone the repository to your machine:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   ```bash
+   git clone https://github.com/jeffIshmael/Intel.git  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+     ```
+2. navigate into the project directory.
 
-## Learn More
+    ```bash 
 
-To learn more about Next.js, take a look at the following resources:
+     cd Intel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+     ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. Install the dependencies.
 
-## Deploy on Vercel
+    ```bash 
+     
+     npm install 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+     ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Run the development server.
+
+    ```bash 
+     
+     npm run dev 
+
+     ```
+
+## Contact
+For any questions or feedback, feel free to reach out to us:
+
+Email: [inteldevs@gmail.com](jeffianmuchiri24@gmail.com).

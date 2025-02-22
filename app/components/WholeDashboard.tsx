@@ -11,9 +11,10 @@ import { useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
-import { ethers } from "ethers";
+import { ethers, Signer } from "ethers";
 import { createTransaction, updateStakedPool, getCurrentStakedPool } from "@/lib/functions";
 import { toast } from "sonner";
+import Transfer from "./Transfer";
 
 const contract = getContract({
   client,
@@ -146,7 +147,7 @@ const WholeDashboard = () => {
     const parsedAmount = ethers.parseUnits(amount.toString(), 18);
 
     // Check balance
-    const balance = await cUSD.balanceOf(signer.address);
+    const balance = await cUSD.balanceOf(await signer.getAddress());
     console.log(balance);
     if (balance < parsedAmount) {
       throw new Error("Insufficient cUSD balance");
@@ -518,6 +519,9 @@ const WholeDashboard = () => {
         balance={Number(balance)}
         handleStake={handleStake} />
       )
+     }
+     {
+      <Transfer amount={0.02} address={user?.address ?? ""}/>
      }
     </div>
   );
