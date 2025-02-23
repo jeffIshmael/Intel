@@ -57,6 +57,7 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
     }
 
     try {
+      setLoading(true);
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,10 +69,14 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
       if (!response.ok) throw new Error(data.error || "Failed to sign up");
 
       toast.info("Sign up successful! You can now log in.");
+      setLoading(false);
       setSignUp(false); // Switch to login view after successful signup
     } catch (error: unknown) {
       toast.error("unable to sign up!!");
+      setLoading(false);
       console.log(error);
+    } finally{
+      setLoading(false);
     }
   };
 
