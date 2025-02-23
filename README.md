@@ -1,7 +1,6 @@
 <p align="center">
-  <img src="./intelLogo.png" alt="logo" width="50" style="border-radius: 50%;">
+  <img src="./intelLogo.png" alt="logo" width="80" style="border-radius: 50%;">
 </p>
-
 <h1 align="center">Intel</h1>
 
 ---
