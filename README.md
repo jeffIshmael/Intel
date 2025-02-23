@@ -1,6 +1,8 @@
 ![logo](intelLogo.png)
 # Intel
 
+---
+
 ## Introduction
 An AI-driven staking protocol that automatically allocates cUSD into liquidity pools, maximizing returns and fully optimized.
 
@@ -49,6 +51,16 @@ The primary objectives of Intel are:
 2.  A specialized algorithm analyzes and identifies the most profitable pool from the fetched data, optimizing returns.
 3.  AI agents automatically verify whether the user has staked in the best pool. If not, the system executes the stake on behalf of the user, ensuring a hands-free, optimized DeFi experience.
 
+## How Intel works
+
+1. **Account Creation** – The user signs up for an Intel account using their email.
+
+2. **Wallet Generation** – Upon registration, an Intel wallet is automatically created for the user.
+
+3. **Depositing Funds** – The user deposits cUSD into their Intel wallet. If they choose to have the AI agent manage staking, they simply transfer funds to the AI wallet.
+
+4. **Real-Time Notifications** – Users receive instant email notifications, keeping them informed of all AI-driven staking activities and transactions.
+
 ## Demo
 1. To create your Intel account, visit our live website: [https://intel.vercel.app](https://intel.vercel.app).
 2. Watch our video demo here: [Video Link](https://www.youtube.com).
@@ -73,15 +85,13 @@ Before running the project locally, ensure you have the following installed:
 2. navigate into the project directory.
 
     ```bash 
-
-     cd Intel
+     cd Intel/intelApp
 
      ```
 
 3. Install the dependencies.
 
-    ```bash 
-     
+    ```bash  
      npm install 
 
      ```
@@ -89,10 +99,10 @@ Before running the project locally, ensure you have the following installed:
 4. Run the development server.
 
     ```bash 
-     
      npm run dev 
 
      ```
+---
 
 ## Contact
 For any questions or feedback, feel free to reach out to us:

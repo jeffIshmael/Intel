@@ -53,7 +53,11 @@ This folder tracks the development progress of the Intel App, detailing goals, c
 
 - Integrate the AI agent with the smart contract for seamless automated staking.
 
+- Account abstraction - Allow users to pay gas fees in cUSD.
+
 - Optimize UI/UX for a smoother user experience.
+
+- Real time notifications to the user's emails.
 
 - Begin the alpha stage for early adopters and real-world testing.
 
