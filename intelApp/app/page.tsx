@@ -333,7 +333,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {stablecoinPools.map((pool) => (
+              {stablecoinPools?.map((pool) => (
                 <tr
                   key={pool.pool}
                   className="border-b border-gray-700 hover:bg-gray-700"

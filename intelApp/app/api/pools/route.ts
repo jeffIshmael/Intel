@@ -31,10 +31,23 @@ interface Pool {
   volumeUsd7d: number;
 }
 
+const fetchWithRetry = async (url: string, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, { method: "GET", cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error(`Fetch attempt ${i + 1} failed:`, error);
+      if (i === retries - 1) throw error;
+      await new Promise((res) => setTimeout(res, 2000)); // Wait before retrying
+    }
+  }
+};
+
 export const GET = async () => {
   try {
-    const response = await fetch("https://yields.llama.fi/pools");
-    const result = await response.json();
+    const result = await fetchWithRetry("https://yields.llama.fi/pools");
 
     if (Array.isArray(result.data)) {
       const celoPools = result.data.filter(
@@ -45,17 +58,10 @@ export const GET = async () => {
         (pool: Pool) => pool.stablecoin === true
       );
 
-      // Filter pools whose symbol contains "cUSD"
       const cUSDStableCoins = allStablecoinPools
         .filter((pool: Pool) => pool.symbol && pool.symbol.includes("CUSD"))
-        .sort((a: Pool, b: Pool) => {
-          if (b.apy !== a.apy) {
-            return b.apy - a.apy; // Sort by APY first
-          }
-          return b.tvlUsd - a.tvlUsd; // If APY is equal, sort by TVL
-        });
+        .sort((a: Pool, b: Pool) => (b.apy !== a.apy ? b.apy - a.apy : b.tvlUsd - a.tvlUsd));
 
-      // Get best pool: Best pool is the one with the highest APY * TVL
       const best = cUSDStableCoins.reduce((best: Pool, pool: Pool) => {
         const score = pool.apy * pool.tvlUsd;
         return score > (best.apy * best.tvlUsd || 0) ? pool : best;
@@ -67,9 +73,7 @@ export const GET = async () => {
     }
   } catch (error) {
     console.error("Error fetching pools:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 };
+

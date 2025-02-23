@@ -1,9 +1,7 @@
 <p align="center">
-  <img src="./intelLogo.png" alt="logo" width="80" style="border-radius: 50%;">
+  <img src="./intelLogo.png" alt="logo" width="100" style="border-radius: 50%;">
 </p>
 <h1 align="center">Intel</h1>
-
----
 
 ## Introduction
 An AI-driven staking protocol that automatically allocates cUSD into liquidity pools, maximizing returns and fully optimized.
