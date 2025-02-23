@@ -45,7 +45,7 @@ The primary objectives of Intel are:
 
 ## Workflow
 
-1. Using the DeFiLlama API, the platform fetchs all Celo-based liquidity pools that support cUSD,.
+1. Using the DeFiLlama API, the platform fetchs all Celo-based liquidity pools that support cUSD.
 2.  A specialized algorithm analyzes and identifies the most profitable pool from the fetched data, optimizing returns.
 3.  AI agents automatically verify whether the user has staked in the best pool. If not, the system executes the stake on behalf of the user, ensuring a hands-free, optimized DeFi experience.
 
