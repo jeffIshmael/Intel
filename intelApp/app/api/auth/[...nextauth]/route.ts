@@ -14,27 +14,33 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing email or password");
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("Missing email or password");
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          if (!user) {
+            throw new Error("User not found");
+          }
+
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+
+          if (!isValid) {
+            throw new Error("Incorrect password");
+          }
+
+          return {
+            id: user.id.toString(),
+            email: user.email || "",
+          };
+        } catch (error) {
+          console.error("Authorization failed:", error);
+          return null; // Return null to indicate failure
         }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user) {
-          throw new Error("User not found");
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) {
-          throw new Error("Incorrect password");
-        }
-
-        return {
-          id: user.id.toString(),
-          email: user.email || "",
-        };
       },
     }),
   ],
