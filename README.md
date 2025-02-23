@@ -1,5 +1,8 @@
-![logo](intelLogo.png)
-# Intel
+<p align="center">
+  <img src="intelLogo.png" alt="logo" width="50" style="border-radius: 50%;">
+</p>
+
+<h1 align="center">Intel</h1>
 
 ---
 

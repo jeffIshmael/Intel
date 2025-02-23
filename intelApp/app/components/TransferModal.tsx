@@ -33,7 +33,7 @@ export default function TransferModal({
       toast.info("AI balance is positive. Staking funds...");
       stake(aiBalance, poolSpec);
     }
-  }, [aiBalance]); // Runs whenever aiBalance changes
+  }, [aiBalance, stake, poolSpec]); // Runs whenever aiBalance changes
 
   const handleTransfer = async () => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {

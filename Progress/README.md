@@ -3,8 +3,7 @@
 This folder tracks the development progress of the Intel App, detailing goals, challenges, and achievements over a planned two-month timeline. Weekly updates and progress reports are documented in separate files within this folder.
 
 ## Development Timeline: 2 Months
-
-### Date: [10 Feb 2025] - [10 April 2025]
+### Date: 10 Feb 2025 - 10 April 2025
 
 ## Month 1: Core Development & AI Agent Implementation
 
@@ -40,6 +39,7 @@ This folder tracks the development progress of the Intel App, detailing goals, c
 
 - 🚧 **In progress:** Implementing AI-driven unstaking and reallocation of funds between pools.
 
+---
 
 ## Month 2: Smart Contract & Mainnet Deployment
 

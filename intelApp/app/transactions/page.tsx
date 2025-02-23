@@ -4,17 +4,26 @@ import { useSession } from "next-auth/react";
 import { getUser, getUserTransactions } from "@/lib/functions";
 
 interface User {
-    id: number;
-    email: string;
-    passPhrase: string;
-    address: string;
-    aiBalance: bigint;
-    staked: boolean;
-    privateKey: string;
-  }
+  id: number;
+  email: string;
+  passPhrase: string;
+  address: string;
+  aiBalance: bigint;
+  staked: boolean;
+  privateKey: string;
+}
+
+interface Transaction {
+  id:number;
+  txHash: string;
+  message: string;
+  amount: number;
+  time: Date;
+  senderId: number;
+}
 const TransactionHistory = () => {
   const { data: session } = useSession();
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState <Transaction[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
   async function fetchUser(userId: number) {
@@ -35,7 +44,7 @@ const TransactionHistory = () => {
     // Fetch transaction history from backend or blockchain
     const fetchTransactions = async () => {
       try {
-        const results = await getUserTransactions((user?.id) ?? 0); // Update with actual API
+        const results = await getUserTransactions(user?.id ?? 0); // Update with actual API
         console.log(results);
         setTransactions(results);
       } catch (error) {
@@ -56,13 +65,13 @@ const TransactionHistory = () => {
           {transactions.map((tx, index) => (
             <li key={index} className="border-b last:border-none p-2">
               <p>
-                <strong>Type:</strong> 
+                <strong>Type:</strong>
               </p>
               <p>
-                <strong>Amount:</strong>  cUSD
+                <strong>Amount:</strong> cUSD
               </p>
               <p>
-                <strong>Date:</strong> 
+                <strong>Date:</strong>
               </p>
             </li>
           ))}

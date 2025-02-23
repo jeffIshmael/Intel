@@ -11,7 +11,7 @@ import { useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
-import { ethers, Signer } from "ethers";
+import { ethers, Signer} from "ethers";
 import { createTransaction, updateStakedPool, getCurrentStakedPool } from "@/lib/functions";
 import { toast } from "sonner";
 import Transfer from "./Transfer";
@@ -129,9 +129,9 @@ const WholeDashboard = () => {
       }
     };
     fetchPools();
-  }, [user?.id]);
+  }, [user?.id, stakedPool]);
 
-  const approveCUSD = async (amount: number, signer: any) => {
+  const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
 
     const cUSD = new ethers.Contract(
@@ -164,7 +164,7 @@ const WholeDashboard = () => {
 
     // Verify allowance
     const allowance = await cUSD.allowance(
-      signer.address,
+      await signer.getAddress(),
       "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
     );
     if (allowance < parsedAmount) {
@@ -172,7 +172,7 @@ const WholeDashboard = () => {
     }
   };
 
-  const stakeCUSD = async (amount: number, signer: any) => {
+  const stakeCUSD = async (amount: number, signer: Signer) => {
     console.log("Staking in Moola...");
 
     const moolaMarket = new ethers.Contract(
@@ -189,7 +189,7 @@ const WholeDashboard = () => {
     const gasEstimate = await moolaMarket.deposit.estimateGas(
       "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Address
       parsedAmount,
-      signer.address,
+      await signer.getAddress(),
       0
     );
 
@@ -199,7 +199,7 @@ const WholeDashboard = () => {
     const tx = await moolaMarket.deposit(
       "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Address
       parsedAmount,
-      signer.address, // onBehalfOf
+      await signer.getAddress(), // onBehalfOf
       0, // referralCode
       { gasLimit: gasEstimate }
     );
@@ -214,6 +214,7 @@ const WholeDashboard = () => {
     const privateKey = user?.privateKey ?? ""; 
     console.log(privateKey);
     const signer = new ethers.Wallet(privateKey, provider);
+    console.log(signer);
     try {
       await approveCUSD(amount, signer);
       const result = await stakeCUSD(amount, signer);

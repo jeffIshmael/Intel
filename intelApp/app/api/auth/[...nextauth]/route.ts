@@ -1,11 +1,11 @@
-import NextAuth, { SessionStrategy } from "next-auth";
+import NextAuth, { NextAuthOptions, Session, SessionStrategy } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-export const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -33,7 +33,7 @@ export const authOptions = {
 
         return {
           id: user.id.toString(), // Cast the id to a string
-          email: user.email,
+          email: user.email || "", // Ensure email is a string
         };
       },
     }),
@@ -46,17 +46,18 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET, // Ensure this is set in `.env`
   callbacks: {
-    async jwt({ token, user }: { token: any; user: any }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id; // Store user ID in the token
+        token.email = user.email ?? ""; // Ensure email is always a string
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token) {
         session.user = {
-          id: token.id, // Pass the user ID to the session
-          email: token.email,
+          id: token.id as string, // Ensure ID is string
+          email: token.email as string,
         };
       }
       return session;
