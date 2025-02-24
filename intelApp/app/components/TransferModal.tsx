@@ -96,7 +96,7 @@ export default function TransferModal({
         <div className="text-center">
           <h2 className="text-sm font-medium text-gray-400">Wallet</h2>
           <p className="text-lg font-bold">
-            {Number.isNaN(balance) ? "--" : aiBalance} cUSD
+            {Number.isNaN(balance) ? "--" : balance} cUSD
           </p>
         </div>
         <button
