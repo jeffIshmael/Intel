@@ -13,7 +13,6 @@ export default function TransferModal({
   userId,
   poolSpec,
   stake,
-  isFetching,
 }: {
   balance: number;
   aiBalance: number;
@@ -21,7 +20,6 @@ export default function TransferModal({
   userId: string;
   poolSpec: string;
   stake: (amount: number, pool: string) => Promise<void>;
-  isFetching: boolean;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -98,14 +96,7 @@ export default function TransferModal({
         <div className="text-center">
           <h2 className="text-sm font-medium text-gray-400">Wallet</h2>
           <p className="text-lg font-bold">
-            {isFetching ? (
-              <div className="bg-gray-200 h-2 w-12 rounded-lg opacity-50 animate-pulse"></div>
-            ) : Number.isNaN(balance) ? (
-              "--"
-            ) : (
-              aiBalance
-            )}{" "}
-            cUSD
+            {Number.isNaN(balance) ? "--" : aiBalance} cUSD
           </p>
         </div>
         <button
@@ -118,14 +109,7 @@ export default function TransferModal({
         <div className="text-center">
           <h2 className="text-sm font-medium text-gray-400">AI Wallet</h2>
           <p className="text-lg font-bold">
-            {isFetching ? (
-              <div className="bg-gray-200 h-2 w-12 rounded-lg opacity-50 animate-pulse"></div>
-            ) : Number.isNaN(balance) ? (
-              "--"
-            ) : (
-              aiBalance
-            )}{" "}
-            cUSD
+            {Number.isNaN(balance) ? "--" : aiBalance} cUSD
           </p>
         </div>
       </div>
@@ -133,13 +117,11 @@ export default function TransferModal({
         <button
           className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg mr-2 transition"
           onClick={() => setQrOpen(true)}
-          disabled={isFetching}
         >
           Deposit
         </button>
         <button
-          onClick={() => toast.info("Still under development")}
-          disabled={isFetching}
+          onClick={() => toast.info("Withdrawal feature coming soon!")}
           className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg ml-2 transition"
         >
           Withdraw

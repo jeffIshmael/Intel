@@ -388,7 +388,7 @@ const WholeDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-col-2 gap-6 sm:grid-col-1 md:grid-col-2">
+      <div className="grid grid-cols-2 gap-6 sm:grid-cols-1 md:grid-cols-2">
         {/* wallet section */}
 
         <TransferModal
@@ -398,7 +398,6 @@ const WholeDashboard = () => {
           userId={(user?.id ?? "defaultId").toString()}
           poolSpec={bestPool?.pool ?? ""}
           stake={handleStake}
-          isFetching={loading}
         />
 
         {/* staked pool section */}
