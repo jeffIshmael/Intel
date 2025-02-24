@@ -83,7 +83,6 @@ const WholeDashboard = () => {
   const [stakedPool, setStakedPool] = useState("");
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
   const [amountStaked, setAmountStaked] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const { data: session } = useSession();
   const { data: balance } = useReadContract({
@@ -102,14 +101,13 @@ const WholeDashboard = () => {
       if (result) {
         setStakedPool(result.poolSpec);
         setAmountStaked(Number(result.amountStaked));
-        setLoading(false);
+       
       }
     }
   }
 
   useEffect(() => {
     if (session?.user?.id) {
-      setLoading(true);
       fetchUser(Number(session.user.id));
     }
   }, [session]);
