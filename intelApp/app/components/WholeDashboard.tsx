@@ -415,7 +415,7 @@ const WholeDashboard = () => {
               </p>
 
               <p className="text-sm text-gray-400 mt-2">Amount Staked</p>
-              <p className="text-xl font-bold">{amountStaked}</p>
+              <p className="text-xl font-bold">{Number(amountStaked)/10 ** 18} cUSD</p>
             </div>
           ) : (
             <p className="text-gray-400">No pool staked yet</p>
