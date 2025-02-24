@@ -18,7 +18,6 @@ import {
   getCurrentStakedPool,
 } from "@/lib/functions";
 import { toast } from "sonner";
-import Transfer from "./Transfer";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 const contract = getContract({
