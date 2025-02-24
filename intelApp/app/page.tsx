@@ -2,18 +2,19 @@
 import { useEffect, useState } from "react";
 import { FaWallet, FaChartLine } from "react-icons/fa";
 import { getContract } from "thirdweb";
-import {  celo } from "thirdweb/chains";
+import { celo } from "thirdweb/chains";
 import { useReadContract } from "thirdweb/react";
 import { client } from "@/client/client";
 import { useActiveAccount } from "thirdweb/react";
-import {toast} from "sonner";
+import { toast } from "sonner";
 import { ethers } from "ethers";
 import { MetaMaskInpageProvider } from "@metamask/providers";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 import Header from "./components/Header";
 import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
-import StakeModal from "./components/StakeModal"
+import StakeModal from "./components/StakeModal";
 
 const contract = getContract({
   client,
@@ -21,21 +22,11 @@ const contract = getContract({
   chain: celo,
 });
 
-
 declare global {
   interface Window {
     ethereum: MetaMaskInpageProvider;
   }
 }
-
-//0x765DE816845861e75A25fCA122bb6898B8B1282a
-//0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1
-
-//0x3d79EdAaBC0EaB6F08ED885C05Fc0B014290D95A
-//0x3d79EdAaBC0EaB6F08ED885C05Fc0B014290D95A - non-fungible position manager
-//https://docs.uniswap.org/contracts/v3/reference/deployments/celo-deployments?utm_source=chatgpt.com
-//0x970b12522CA9b4054807a2c5B736149a5BE6f670 - moola
-//0x970b12522CA9b4054807a2c5B736149a5BE6f670
 
 interface Pool {
   apy: number;
@@ -68,15 +59,16 @@ interface Pool {
 }
 
 export default function Home() {
-  const [stablecoinPools, setStablecoinPools] = useState<Pool[]>([]);
+  const [stablecoinPools, setStablecoinPools] = useState<Pool[] | null>(null);
   const [bestPool, setBestPool] = useState<Pool | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const account = useActiveAccount();
-  const [showStakingModal,setShowStakingModal] = useState(false);
-  const[stakingPool,setStakingPool] = useState("");
+  const [showStakingModal, setShowStakingModal] = useState(false);
+  const [stakingPool, setStakingPool] = useState("");
   const [buttonText, setButtonText] = useState("...");
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -87,6 +79,7 @@ export default function Home() {
   useEffect(() => {
     const fetchPools = async () => {
       try {
+        setFetching(true);
         const response = await fetch("/api/pools", {
           method: "GET",
           headers: {
@@ -98,9 +91,13 @@ export default function Home() {
         if (data) {
           setStablecoinPools(data.allPools);
           setBestPool(data.bestPool);
+          setFetching(false);
         }
       } catch (error) {
+        setFetching(false);
         console.log(error);
+      } finally {
+        setFetching(false);
       }
     };
     fetchPools();
@@ -240,11 +237,10 @@ export default function Home() {
     } catch (error) {
       console.log("Staking failed:", error);
       toast.error("Staking failed. Please try again.");
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
- 
 
   const goToUniswap = () => {
     window.open(`https://app.uniswap.org/explore/pools/celo`, "_blank");
@@ -276,10 +272,18 @@ export default function Home() {
           <p className="text-green-400 text-xl font-bold">
             {isLoading
               ? "Loading..."
+              : !account?.address
+              ? "-- cUSD"
               : `${(Number(balance) / 10 ** 18).toFixed(2)} cUSD`}
           </p>
           <button
-            onClick={() => setShowQR(true)}
+            onClick={
+              !account?.address
+                ? () => {
+                    toast.error("Please connect your wallet.");
+                  }
+                : () => setShowQR(true)
+            }
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg"
           >
             Deposit
@@ -312,7 +316,13 @@ export default function Home() {
                 }
               }}
             >
-              {bestPool?.project === "uniswap-v3" ? "Go to Uniswap" : "Stake"}
+              {bestPool?.project === "uniswap-v3" ? (
+                <span className="flex flex-col-2 gap-x-1 items-center">
+                  Go to Uniswap <FaArrowUpRightFromSquare />
+                </span>
+              ) : (
+                "Stake"
+              )}
             </button>
           </div>
         )}
@@ -333,40 +343,59 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {stablecoinPools?.map((pool) => (
-                <tr
-                  key={pool.pool}
-                  className="border-b border-gray-700 hover:bg-gray-700"
-                >
-                  <td className="p-4">{pool.project}</td>
-                  <td className="p-4">{pool.symbol}</td>
-                  <td className="p-4 text-green-400 font-bold">
-                    {pool.apy.toFixed(2)}%
-                  </td>
-                  <td className="p-4">${pool.tvlUsd.toLocaleString()}</td>
-                  <td className="p-4">
-                    <button
-                      className={` px-5 py-2 rounded-md text-white ${
-                        pool.project !== "uniswap-v3"
-                          ? "bg-green-500 hover:bg-green-600"
-                          : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
-                      }`}
-                      onClick={() => {
-                        if (pool.project === "uniswap-v3") {
-                          goToUniswap();
-                        } else {
-                          setStakingPool(pool.pool)
-                          setShowStakingModal(true);
-                        }
-                      }}
-                    >
-                      {pool.project === "uniswap-v3"
-                        ? "Go to Uniswap"
-                        : "Stake"}
-                    </button>
+              {fetching || !stablecoinPools && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-green-500">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              )}
+              {!fetching && stablecoinPools?.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-gray-400">
+                    No stablecoin pools found.
+                  </td>
+                </tr>
+              )}
+              {!fetching &&
+                stablecoinPools?.map((pool) => (
+                  <tr
+                    key={pool.pool}
+                    className="border-b border-gray-700 hover:bg-gray-700"
+                  >
+                    <td className="p-4">{pool.project}</td>
+                    <td className="p-4">{pool.symbol}</td>
+                    <td className="p-4 text-green-400 font-bold">
+                      {pool.apy.toFixed(2)}%
+                    </td>
+                    <td className="p-4">${pool.tvlUsd.toLocaleString()}</td>
+                    <td className="p-4">
+                      <button
+                        className={` px-5 py-2 rounded-md text-white ${
+                          pool.project !== "uniswap-v3"
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
+                        }`}
+                        onClick={() => {
+                          if (pool.project === "uniswap-v3") {
+                            goToUniswap();
+                          } else {
+                            setStakingPool(pool.pool);
+                            setShowStakingModal(true);
+                          }
+                        }}
+                      >
+                        {pool.project === "uniswap-v3" ? (
+                          <span className="flex flex-col-2 gap-x-1 items-center">
+                            Go to Uniswap <FaArrowUpRightFromSquare />
+                          </span>
+                        ) : (
+                          "Stake"
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -384,17 +413,15 @@ export default function Home() {
           onClose={() => setShowQR(false)}
         />
       )}
-      {
-        showStakingModal && (
-          <StakeModal
-            showStakingModal={showStakingModal}
-            setShowStakingModal={setShowStakingModal}
-            stakingPool={stakingPool}
-            balance={Number(balance)}
-            handleStake={handleStake}
-          />
-        )
-      }
+      {showStakingModal && (
+        <StakeModal
+          showStakingModal={showStakingModal}
+          setShowStakingModal={setShowStakingModal}
+          stakingPool={stakingPool}
+          balance={Number(balance)}
+          handleStake={handleStake}
+        />
+      )}
     </div>
   );
 }

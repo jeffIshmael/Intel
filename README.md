@@ -62,7 +62,7 @@ The primary objectives of Intel are:
 4. **Real-Time Notifications** – Users receive instant email notifications, keeping them informed of all AI-driven staking activities and transactions.
 
 ## Demo
-1. To create your Intel account, visit our live website: [https://intel.vercel.app](https://intel.vercel.app).
+1. To create your Intel account, visit our live website: [https://intel-mocha.vercel.app/](https://intel-mocha.vercel.app).
 2. Watch our video demo here: [Video Link](https://www.youtube.com).
 
 ---

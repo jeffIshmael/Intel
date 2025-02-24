@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { FaBell,  FaRegCopy, FaHome } from "react-icons/fa";
+import { FaBell, FaRegCopy, FaHome } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import StakeModal from "./StakeModal";
 import TransferModal from "./TransferModal";
@@ -11,10 +11,15 @@ import { useReadContract } from "thirdweb/react";
 import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
-import { ethers, Signer} from "ethers";
-import { createTransaction, updateStakedPool, getCurrentStakedPool } from "@/lib/functions";
+import { ethers, Signer } from "ethers";
+import {
+  createTransaction,
+  updateStakedPool,
+  getCurrentStakedPool,
+} from "@/lib/functions";
 import { toast } from "sonner";
 import Transfer from "./Transfer";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 
 const contract = getContract({
   client,
@@ -68,7 +73,6 @@ interface User {
 }
 
 const WholeDashboard = () => {
-  
   const [showNotifications, setShowNotifications] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [stakingPools, setStakingPools] = useState<Pool[]>([]);
@@ -80,13 +84,14 @@ const WholeDashboard = () => {
   const [stakedPool, setStakedPool] = useState("");
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
   const [amountStaked, setAmountStaked] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const { data: session } = useSession();
   const { data: balance } = useReadContract({
     contract,
     method: "function balanceOf(address) returns (uint256)",
     params: [user?.address ?? ""], // type safe params
   });
-
 
   async function fetchUser(userId: number) {
     const user = await getUser(userId);
@@ -98,12 +103,14 @@ const WholeDashboard = () => {
       if (result) {
         setStakedPool(result.poolSpec);
         setAmountStaked(Number(result.amountStaked));
+        setLoading(false);
       }
     }
   }
 
   useEffect(() => {
     if (session?.user?.id) {
+      setLoading(true);
       fetchUser(Number(session.user.id));
     }
   }, [session]);
@@ -111,6 +118,7 @@ const WholeDashboard = () => {
   useEffect(() => {
     const fetchPools = async () => {
       try {
+        setFetching(true);
         const response = await fetch("/api/pools", {
           method: "GET",
           headers: {
@@ -122,10 +130,16 @@ const WholeDashboard = () => {
         if (data) {
           setStakingPools(data.allPools);
           setBestPool(data.bestPool);
-          setCurrentPool((data.allPools).filter((pool: Pool) => pool.pool === stakedPool)[0]);
+          setCurrentPool(
+            data.allPools.filter((pool: Pool) => pool.pool === stakedPool)[0]
+          );
+          setFetching(false);
         }
       } catch (error) {
         console.log(error);
+        setFetching(false);
+      } finally {
+        setFetching(false);
       }
     };
     fetchPools();
@@ -210,8 +224,8 @@ const WholeDashboard = () => {
   };
 
   const handleStake = async (amount: number, pool: string) => {
-    const provider = new ethers.JsonRpcProvider("https://forno.celo.org"); 
-    const privateKey = user?.privateKey ?? ""; 
+    const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
+    const privateKey = user?.privateKey ?? "";
     console.log(privateKey);
     const signer = new ethers.Wallet(privateKey, provider);
     console.log(signer);
@@ -226,7 +240,7 @@ const WholeDashboard = () => {
           amount
         );
         console.log(pool);
-        await updateStakedPool(user?.id ?? 0, pool, BigInt(amount * 10 ** 18 ));
+        await updateStakedPool(user?.id ?? 0, pool, BigInt(amount * 10 ** 18));
         toast.success(
           <>
             Successfully staked.{" "}
@@ -251,7 +265,7 @@ const WholeDashboard = () => {
   const copyToClipboard = () => {
     const address = user?.address || "";
     navigator.clipboard.writeText(address);
-    alert("Wallet Address Copied!");
+    toast.info("Wallet Address Copied!");
   };
 
   const goToUniswap = () => {
@@ -282,7 +296,7 @@ const WholeDashboard = () => {
               title="User Profile"
               className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500 text-white font-semibold text-lg"
             >
-            {((user?.email ?? "")?.slice(0,1))?.toUpperCase()}
+              {(user?.email ?? "")?.slice(0, 1)?.toUpperCase()}
             </div>
             {/* Notification Bell Icon */}
             <FaBell
@@ -351,7 +365,7 @@ const WholeDashboard = () => {
           {showNotifications && (
             <div
               className="absolute right-12 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md py-2 z-10"
-              onClick={(e) => e.stopPropagation()} // Prevent closing on click inside the dropdown
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                 <strong>Notifications</strong>
@@ -375,7 +389,7 @@ const WholeDashboard = () => {
         </div>
       </div>
 
-      <div className="flex flex-col-2">
+      <div className="grid grid-col-2 gap-6 sm:grid-col-1 md:grid-col-2">
         {/* wallet section */}
 
         <TransferModal
@@ -383,9 +397,9 @@ const WholeDashboard = () => {
           aiBalance={Number(user?.aiBalance ?? 0)}
           address={user?.address ?? ""}
           userId={(user?.id ?? "defaultId").toString()}
-          poolSpec= {bestPool?.pool ?? ""}
+          poolSpec={bestPool?.pool ?? ""}
           stake={handleStake}
-          
+          isFetching={loading}
         />
 
         {/* staked pool section */}
@@ -393,12 +407,16 @@ const WholeDashboard = () => {
           <h1 className="text-xl font-semibold mb-4">Current Staked Pool</h1>
           {user?.staked ? (
             <div className="bg-gray-800 p-5 rounded-lg shadow-md">
-              <h2 className="text-lg font-bold text-green-400">{(currentPool?.project) ?? ""}</h2>
+              <h2 className="text-lg font-bold text-green-400">
+                {currentPool?.project ?? ""}
+              </h2>
 
               <p className="text-sm text-gray-400 mt-1">
                 Annual Percentage Yield (APY)
               </p>
-              <p className="text-2xl font-semibold text-green-500">{currentPool?.apyBase}</p>
+              <p className="text-2xl font-semibold text-green-500">
+                {currentPool?.apyBase}
+              </p>
 
               <p className="text-sm text-gray-400 mt-2">Amount Staked</p>
               <p className="text-xl font-bold">{amountStaked}</p>
@@ -412,118 +430,152 @@ const WholeDashboard = () => {
       {/* best to stake section */}
       <div className="bg-gray-800 mt-6 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
         <h1 className="text-xl font-semibold mb-4">🔥 Best Staking Pool</h1>
+        {fetching ? (
+          <div className="text-gray-300">Loading...</div>
+        ) : (
+          <div className="bg-gray-700 p-5 rounded-lg shadow-md">
+            <h2 className="text-lg font-bold text-blue-400">
+              {bestPool?.project}
+            </h2>
 
-        <div className="bg-gray-700 p-5 rounded-lg shadow-md">
-          <h2 className="text-lg font-bold text-blue-400">
-            {bestPool?.project}
-          </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Annual Percentage Yield (APY)
+            </p>
+            <p className="text-2xl font-semibold text-green-500">
+              {bestPool?.apyBase}
+            </p>
 
-          <p className="text-sm text-gray-400 mt-1">
-            Annual Percentage Yield (APY)
-          </p>
-          <p className="text-2xl font-semibold text-green-500">
-            {bestPool?.apyBase}
-          </p>
-
-          <p className="text-sm text-gray-400 mt-2">{bestPool?.symbol}</p>
-          <div className="flex flex-col-2 space-x-4">
-            <p className="text-xl font-bold">{bestPool?.tvlUsd}</p>
-            <button
-              className={`mt-4  text-white font-semibold py-2 px-4 rounded-lg transition mr-0 ${
-                bestPool?.project !== "uniswap-v3"
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
-              }`}
-              onClick={() => {
-                if (bestPool?.project === "uniswap-v3") {
-                  goToUniswap();
-                } else {
-                  setPoolToStake((bestPool?.pool) ?? "");
-                  setShowStakingModal(true);
-                }
-              }}
-            >
-              {bestPool?.project === "uniswap-v3" ? "Go to Uniswap" : "Stake"}
-            </button>
+            <p className="text-sm text-gray-400 mt-2">{bestPool?.symbol}</p>
+            <div className="flex flex-col-2 space-x-4">
+              <p className="text-xl font-bold">{bestPool?.tvlUsd}</p>
+              <button
+                className={`mt-4  text-white font-semibold py-2 px-4 rounded-lg transition mr-0 ${
+                  bestPool?.project !== "uniswap-v3"
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
+                }`}
+                onClick={() => {
+                  if (bestPool?.project === "uniswap-v3") {
+                    goToUniswap();
+                  } else {
+                    setPoolToStake(bestPool?.pool ?? "");
+                    setShowStakingModal(true);
+                  }
+                }}
+              >
+                {bestPool?.project === "uniswap-v3" ? (
+                  <span className="flex flex-col-2 gap-x-1 items-center">
+                    Go to Uniswap <FaArrowUpRightFromSquare />
+                  </span>
+                ) : (
+                  "Stake"
+                )}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Top Staking Pools Section */}
-      <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">🔥 Top Staking Pools</h2>
-
-        <table className="w-full table-auto">
-          <thead>
-            <tr className="bg-gray-200 dark:bg-gray-700 text-left">
-              <th className="px-4 py-2">Pool Name</th>
-              <th className="px-4 py-2">Symbol</th>
-              <th className="px-4 py-2">APY (30d Avg)</th>
-              <th className="px-4 py-2">TVL</th>
-              <th className="px-4 py-2">Predicted Trend</th>
-              <th className="px-4 py-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stakingPools?.map((pool, index) => (
-              <tr
-                key={index}
-                className={`${
-                  index % 2 === 0 ? "bg-gray-50 dark:bg-gray-900" : ""
-                }`}
-              >
-                <td className="px-4 py-3">{pool.project}</td>
-                <td className="px-4 py-3">{pool.symbol}</td>
-                <td className="px-4 py-3">{pool.apyMean30d}</td>
-                <td className="px-4 py-3">{pool.tvlUsd}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-1 text-sm font-semibold rounded-lg ${
-                      pool.predictions.predictedClass === "Stable/Up"
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                    }`}
-                  >
-                    {pool.predictions.predictedClass} (
-                    {pool.predictions.predictedProbability})
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    className={`text-white font-semibold py-2 px-4 rounded-lg transition ${
-                      pool.project !== "uniswap-v3"
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
-                    }`}
-                    onClick={() => {
-                      if (pool.project === "uniswap-v3") {
-                        goToUniswap();
-                      } else {
-                        setPoolToStake((pool.pool) ??"");
-                        setShowStakingModal(true);
-                      }
-                    }}
-                  >
-                    {pool.project === "uniswap-v3" ? "Go to Uniswap" : "Stake"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-     {
-      showStakingModal && (
-        <StakeModal showStakingModal={showStakingModal}
-        setShowStakingModal={setShowStakingModal}
-        stakingPool={poolToStake}
-        balance={Number(balance)}
-        handleStake={handleStake} />
-      )
-     }
-     {
-      <Transfer amount={0.02} address={user?.address ?? ""}/>
-     }
+      <section className="mt-12 px-6">
+        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">🔥 Top Staking Pools</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full overflow-hidden">
+              <thead>
+                <tr className="bg-gray-200 dark:bg-gray-700 text-left">
+                  <th className="px-4 py-2">Pool Name</th>
+                  <th className="px-4 py-2">Symbol</th>
+                  <th className="px-4 py-2">APY (30d Avg)</th>
+                  <th className="px-4 py-2">TVL</th>
+                  <th className="px-4 py-2">Predicted Trend</th>
+                  <th className="px-4 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fetching ||
+                  (!stakingPools && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="text-center py-4 text-green-500"
+                      >
+                        Loading...
+                      </td>
+                    </tr>
+                  ))}
+                {!fetching && stakingPools?.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-gray-400">
+                      No staking pools found.
+                    </td>
+                  </tr>
+                )}
+                {!fetching &&
+                  stakingPools?.map((pool, index) => (
+                    <tr
+                      key={index}
+                      className={`${
+                        index % 2 === 0 ? "bg-gray-50 dark:bg-gray-900" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3">{pool.project}</td>
+                      <td className="px-4 py-3">{pool.symbol}</td>
+                      <td className="px-4 py-3">{pool.apyMean30d}</td>
+                      <td className="px-4 py-3">{pool.tvlUsd}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-1 text-sm font-semibold rounded-lg ${
+                            pool.predictions.predictedClass === "Stable/Up"
+                              ? "bg-green-500 text-white"
+                              : "bg-red-500 text-white"
+                          }`}
+                        >
+                          {pool.predictions.predictedClass} (
+                          {pool.predictions.predictedProbability})
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          className={`text-white font-semibold py-2 px-4 rounded-lg transition ${
+                            pool.project !== "uniswap-v3"
+                              ? "bg-green-500 hover:bg-green-600"
+                              : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
+                          }`}
+                          onClick={() => {
+                            if (pool.project === "uniswap-v3") {
+                              goToUniswap();
+                            } else {
+                              setPoolToStake(pool.pool ?? "");
+                              setShowStakingModal(true);
+                            }
+                          }}
+                        >
+                          {pool.project === "uniswap-v3" ? (
+                            <span className="flex flex-col-2 gap-x-1 items-center">
+                              Go to Uniswap <FaArrowUpRightFromSquare />
+                            </span>
+                          ) : (
+                            "Stake"
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      {showStakingModal && (
+        <StakeModal
+          showStakingModal={showStakingModal}
+          setShowStakingModal={setShowStakingModal}
+          stakingPool={poolToStake}
+          balance={Number(balance)}
+          handleStake={handleStake}
+        />
+      )}
     </div>
   );
 };
