@@ -323,6 +323,7 @@ const WholeDashboard = () => {
           "You staked",
           amount
         );
+        console.log(transaction);
         await updateStakedPool(
           user?.id ?? 0,
           poolSpec,
