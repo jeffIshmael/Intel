@@ -145,7 +145,7 @@ const WholeDashboard = () => {
       }
     };
     fetchPools();
-  }, [user?.id, stakedPool]);
+  }, [user?.id, stakedPool,bestAIStakingPool,currentPool]);
 
   const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
@@ -243,6 +243,7 @@ const WholeDashboard = () => {
           "You staked",
           amount
         );
+        console.log(transaction);
         console.log(pool);
         await updateStakedPool(
           user?.id ?? 0,
