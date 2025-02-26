@@ -1,18 +1,23 @@
+"use client"
 import React, { useState } from "react";
 import { FaTimes } from "react-icons/fa";
 
 const StakeModal = ({
-  showStakingModal,
+  stakingPoolSpec,
   setShowStakingModal,
   stakingPool,
   balance,
   handleStake,
+  isStaking,
+  showingText,
 }: {
-  showStakingModal: boolean;
+  stakingPoolSpec: string;
   setShowStakingModal: React.Dispatch<React.SetStateAction<boolean>>;
   stakingPool: string;
   balance: number;
   handleStake: (amount: number, pool: string) => Promise<void>;
+  isStaking:boolean;
+  showingText:string;
 }) => {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +25,7 @@ const StakeModal = ({
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg w-96">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Stake cUSD</h2>
+          <h2 className="text-lg font-semibold items-center">Stake cUSD to {stakingPool}</h2>
           <button
             onClick={() => setShowStakingModal(false)}
             disabled={loading}
@@ -41,23 +46,25 @@ const StakeModal = ({
           onChange={(e) => setAmount(e.target.value)}
           className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 mb-4"
           placeholder="Enter amount"
+          required
         />
         <p className="flex mr-2 justify-end">
           Available: {(Number(balance) / 10 ** 18).toFixed(2)} cUSD
         </p>
 
         <button
-          onClick={() => {
-            setLoading(showStakingModal);
-            handleStake(Number(amount), stakingPool);
-            setLoading(false);
+          onClick={async () => {
+            setLoading(true);
+            console.log(stakingPoolSpec);
+            await handleStake(Number(amount), stakingPool);
+            setShowStakingModal(false);
           }}
-          disabled={loading}
+          disabled={isStaking}
           className={`w-full bg-blue-600  text-white font-semibold py-2 px-4 rounded-lg transition ${
-            loading ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-500"
+            isStaking ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-500"
           }`}
         >
-          {loading ? "staking..." : "stake"}
+          {isStaking ? showingText : "stake"}
         </button>
       </div>
     </div>

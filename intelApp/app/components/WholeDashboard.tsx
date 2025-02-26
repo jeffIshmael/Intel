@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FaBell, FaRegCopy, FaHome } from "react-icons/fa";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import StakeModal from "./StakeModal";
 import TransferModal from "./TransferModal";
 import { getUser } from "@/lib/functions";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import { IoExitOutline } from "react-icons/io5";
 
 const contract = getContract({
   client,
@@ -84,6 +85,10 @@ const WholeDashboard = () => {
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
   const [amountStaked, setAmountStaked] = useState(0);
   const [fetching, setFetching] = useState(false);
+  const [buttonText, setButtonText] = useState("");
+  const [stakingPoolSpec, setStakingPoolSpec] = useState("");
+  const [isStaking, setIsStaking] = useState(false);
+  const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
   const { data: session } = useSession();
   const { data: balance } = useReadContract({
     contract,
@@ -93,15 +98,12 @@ const WholeDashboard = () => {
 
   async function fetchUser(userId: number) {
     const user = await getUser(userId);
-    console.log(user);
     if (user) {
       setUser(user);
       const result = await getCurrentStakedPool(userId);
-      console.log(result);
       if (result) {
         setStakedPool(result.poolSpec);
         setAmountStaked(Number(result.amountStaked));
-       
       }
     }
   }
@@ -126,11 +128,14 @@ const WholeDashboard = () => {
         console.log(data);
         if (data) {
           setStakingPools(data.allPools);
-          setBestPool(data.bestPool);
+          setBestPool(data.bestCUSDPool);
+          setBestAIStakingPool(data.bestNonUniswapV3Pool);
           setCurrentPool(
             data.allPools.filter((pool: Pool) => pool.pool === stakedPool)[0]
           );
           setFetching(false);
+          console.log(currentPool);
+          console.log(bestAIStakingPool);
         }
       } catch (error) {
         console.log(error);
@@ -144,6 +149,7 @@ const WholeDashboard = () => {
 
   const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
+    setButtonText("Approving cUSD transfer...");
 
     const cUSD = new ethers.Contract(
       "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Contract Address
@@ -161,7 +167,7 @@ const WholeDashboard = () => {
     const balance = await cUSD.balanceOf(await signer.getAddress());
     console.log(balance);
     if (balance < parsedAmount) {
-      throw new Error("Insufficient cUSD balance");
+      toast.error("Insufficient cUSD balance");
     }
 
     // Approve transaction
@@ -171,7 +177,9 @@ const WholeDashboard = () => {
     );
     await tx.wait();
 
-    console.log("cUSD Approved!");
+    toast("cUSD Approved!", {
+      description: "Now staking...",
+    });
 
     // Verify allowance
     const allowance = await cUSD.allowance(
@@ -179,12 +187,12 @@ const WholeDashboard = () => {
       "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
     );
     if (allowance < parsedAmount) {
-      throw new Error("Approval failed, allowance insufficient");
+      toast.error("Approval failed, allowance insufficient");
     }
   };
 
   const stakeCUSD = async (amount: number, signer: Signer) => {
-    console.log("Staking in Moola...");
+    setButtonText("Staking...");
 
     const moolaMarket = new ethers.Contract(
       "0x970b12522CA9b4054807a2c5B736149a5BE6f670", // Moola Market Proxy
@@ -223,10 +231,9 @@ const WholeDashboard = () => {
   const handleStake = async (amount: number, pool: string) => {
     const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
     const privateKey = user?.privateKey ?? "";
-    console.log(privateKey);
     const signer = new ethers.Wallet(privateKey, provider);
-    console.log(signer);
     try {
+      setIsStaking(true);
       await approveCUSD(amount, signer);
       const result = await stakeCUSD(amount, signer);
       if (result) {
@@ -237,24 +244,141 @@ const WholeDashboard = () => {
           amount
         );
         console.log(pool);
-        await updateStakedPool(user?.id ?? 0, pool, BigInt(amount * 10 ** 18));
+        await updateStakedPool(
+          user?.id ?? 0,
+          stakingPoolSpec,
+          BigInt(amount * 10 ** 18)
+        );
         toast.success(
-          <>
-            Successfully staked.{" "}
-            <a
-              href={`https://celoscan.io/tx/${transaction.txHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 underline"
+          <div className="flex items-center space-x-4">
+            {/* Icon for visual appeal */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              Explore on CeloScan
-            </a>
-          </>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+
+            {/* Main Content */}
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                Successfully staked {amount} cUSD to {pool}.
+              </p>
+              <p className="text-sm text-gray-600">
+                <a
+                  href={`https://celoscan.io/tx/${result.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
+                >
+                  Explore on CeloScan
+                </a>
+              </p>
+            </div>
+          </div>,
+          {
+            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
+            style: {
+              borderLeft: "4px solid #34C759", // Green border for success
+            },
+            duration: 5000,
+          }
         );
       }
       console.log(result);
+      setIsStaking(false);
     } catch (error) {
       console.error("Staking failed:", error);
+      toast.error("Unable to stake.");
+      setIsStaking(false);
+    } finally {
+      setIsStaking(false);
+    }
+  };
+
+  const handleAIStaking = async (
+    amount: number,
+    poolSpec: string,
+    poolName: string
+  ) => {
+    const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
+    const privateKey = user?.privateKey ?? "";
+    const signer = new ethers.Wallet(privateKey, provider);
+    try {
+      await approveCUSD(amount, signer);
+      const result = await stakeCUSD(amount, signer);
+      if (result) {
+        const transaction = await createTransaction(
+          user?.id ?? 0,
+          result.hash,
+          "You staked",
+          amount
+        );
+        await updateStakedPool(
+          user?.id ?? 0,
+          poolSpec,
+          BigInt(amount * 10 ** 18)
+        );
+        toast.success(
+          <div className="flex items-center space-x-4">
+            {/* Icon for visual appeal */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+
+            {/* Main Content */}
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                Successfully staked {amount} cUSD to {poolName}.
+              </p>
+              <p className="text-sm text-gray-600">
+                <a
+                  href={`https://celoscan.io/tx/${result.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
+                >
+                  Explore on CeloScan
+                </a>
+              </p>
+            </div>
+          </div>,
+          {
+            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
+            style: {
+              borderLeft: "4px solid #34C759", // Green border for success
+            },
+            duration: 5000,
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Staking failed:", error);
+      toast.error("Unable to stake.", {
+        description: "Make sure you have enough gas.",
+      });
+      setIsStaking(false);
+    } finally {
+      setIsStaking(false);
     }
   };
 
@@ -262,7 +386,7 @@ const WholeDashboard = () => {
   const copyToClipboard = () => {
     const address = user?.address || "";
     navigator.clipboard.writeText(address);
-    toast.info("Wallet Address Copied!");
+    toast("Wallet Address Copied!");
   };
 
   const goToUniswap = () => {
@@ -351,8 +475,19 @@ const WholeDashboard = () => {
               </div>
               {/* LogOut */}
               <div className="px-4 py-2">
-                <button className="text-gray-500 hover:text-gray-600">
-                  Log Out
+                <button
+                  onClick={async () => {
+                    try {
+                      await signOut({ callbackUrl: "/" }); 
+                    } catch (error) {
+                      console.error("Sign-out failed:", error);
+                    }
+                  }}
+                  className="text-gray-300 hover:text-gray-400 font-bold"
+                >
+                  <span className="flex items-center gap-x-2">
+                    Log Out <IoExitOutline />
+                  </span>
                 </button>
               </div>
             </div>
@@ -394,8 +529,9 @@ const WholeDashboard = () => {
           aiBalance={Number(user?.aiBalance ?? 0)}
           address={user?.address ?? ""}
           userId={(user?.id ?? "defaultId").toString()}
-          poolSpec={bestPool?.pool ?? ""}
-          stake={handleStake}
+          poolSpec={bestAIStakingPool?.pool ?? ""}
+          poolName={bestAIStakingPool?.project ?? ""}
+          stake={handleAIStaking}
         />
 
         {/* staked pool section */}
@@ -415,7 +551,9 @@ const WholeDashboard = () => {
               </p>
 
               <p className="text-sm text-gray-400 mt-2">Amount Staked</p>
-              <p className="text-xl font-bold">{Number(amountStaked)/10 ** 18} cUSD</p>
+              <p className="text-xl font-bold">
+                {Number(amountStaked) / 10 ** 18} cUSD
+              </p>
             </div>
           ) : (
             <p className="text-gray-400">No pool staked yet</p>
@@ -542,7 +680,8 @@ const WholeDashboard = () => {
                             if (pool.project === "uniswap-v3") {
                               goToUniswap();
                             } else {
-                              setPoolToStake(pool.pool ?? "");
+                              setPoolToStake(pool.project ?? "");
+                              setStakingPoolSpec(pool.pool ?? "");
                               setShowStakingModal(true);
                             }
                           }}
@@ -565,11 +704,13 @@ const WholeDashboard = () => {
       </section>
       {showStakingModal && (
         <StakeModal
-          showStakingModal={showStakingModal}
+          stakingPoolSpec={stakingPoolSpec}
           setShowStakingModal={setShowStakingModal}
           stakingPool={poolToStake}
           balance={Number(balance)}
           handleStake={handleStake}
+          isStaking={isStaking}
+          showingText={buttonText}
         />
       )}
     </div>

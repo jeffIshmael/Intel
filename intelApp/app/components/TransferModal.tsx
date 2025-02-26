@@ -12,6 +12,7 @@ export default function TransferModal({
   address,
   userId,
   poolSpec,
+  poolName,
   stake,
 }: {
   balance: number;
@@ -19,7 +20,8 @@ export default function TransferModal({
   address: string;
   userId: string;
   poolSpec: string;
-  stake: (amount: number, pool: string) => Promise<void>;
+  poolName: string;
+  stake: (amount: number, poolSpec: string, poolName: string) => Promise<void>;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -30,10 +32,10 @@ export default function TransferModal({
   useEffect(() => {
     // Automatically stake if AI balance is positive
     if (aiBalance > 0) {
-      toast.info("AI balance is positive. Staking funds...");
-      stake(aiBalance, poolSpec);
+      toast.info("AI wallet balance is positive. Staking funds...");
+      stake(aiBalance, poolSpec, poolName);
     }
-  }, [aiBalance, stake, poolSpec]); // Runs whenever aiBalance changes
+  }, [aiBalance, stake, poolSpec, poolName]); // Runs whenever aiBalance changes
 
   const handleTransfer = async () => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
@@ -59,13 +61,34 @@ export default function TransferModal({
         if (result) {
           toast.success(`Transferred ${amount} cUSD to AI Wallet`);
         }
-        // Calling stake function after transfer
-        await stake(Number(amount), poolSpec);
-        await updateAIBalance(
-          Number(userId),
-          BigInt(Number(amount) * 10 ** 18),
-          true
-        );
+        // A new Promise to handle both stake and updateAIBalance operations
+        const stakingPromise = new Promise((resolve, reject) => {
+          //  Calling the stake function
+          stake(Number(amount), poolSpec, poolName)
+            .then((stakeResult) => {
+              // After stake succeeds, call updateAIBalance
+              return updateAIBalance(
+                Number(userId),
+                BigInt(Number(amount) * 10 ** 18),
+                true
+              ).then((updateResult) => {
+                // Resolve the Promise with both results
+                resolve({ stakeResult, updateResult });
+              });
+            })
+            .catch((error) => {
+              // Reject the Promise if any step fails
+              reject(error);
+            });
+        });
+
+        // Use toast.promise to show loading, success, and error states
+        toast.promise(stakingPromise, {
+          loading: "Please wait.Intel AI is staking...", 
+          success: "Staking completed successfully!", 
+          error: (err) =>
+            `Error during staking: ${err.message || "Unknown error"}`, 
+        });
       } else {
         const result = await updateAIBalance(
           Number(userId),
@@ -88,6 +111,8 @@ export default function TransferModal({
       setLoading(false);
     }
   };
+
+  
 
   return (
     <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">

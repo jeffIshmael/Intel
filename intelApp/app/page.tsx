@@ -67,8 +67,9 @@ export default function Home() {
   const [showStakingModal, setShowStakingModal] = useState(false);
   const [stakingPool, setStakingPool] = useState("");
   const [buttonText, setButtonText] = useState("...");
-  const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [isStaking, setIsStaking] = useState(false);
+  const[stakingPoolSpec,setStakingPoolSpec] = useState("");
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -90,7 +91,7 @@ export default function Home() {
         console.log(data);
         if (data) {
           setStablecoinPools(data.allPools);
-          setBestPool(data.bestPool);
+          setBestPool(data.bestCUSDPool);
           setFetching(false);
         }
       } catch (error) {
@@ -157,7 +158,11 @@ export default function Home() {
     );
     await tx.wait();
 
-    toast.info("cUSD Approved!");
+    toast("cUSD Transfer Approved!!",{
+      description: "Now staking..."
+    });
+
+    setButtonText("checking allowance...");
 
     // Verify allowance
     const allowance = await cUSD.allowance(
@@ -165,7 +170,7 @@ export default function Home() {
       "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
     );
     if (allowance < parsedAmount) {
-      throw new Error("Approval failed, allowance insufficient");
+      toast.error("Approval failed, allowance insufficient");
     }
   };
 
@@ -211,34 +216,57 @@ export default function Home() {
 
   const handleStake = async (amount: number) => {
     try {
-      setLoading(true);
+      setIsStaking(true);
       await approveCUSD(amount);
       await checkAllowance();
       const result = await stakeCUSD(amount);
-      console.log(loading);
-      console.log(buttonText);
       toast.success(
-        <>
-          Successfully staked.{" "}
-          <a
-            href={`https://celoscan.io/tx/${result.hash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 underline"
+        <div className="flex items-center space-x-4">
+          {/* Icon for visual appeal */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-green-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            Explore on CeloScan
-          </a>
-        </>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+      
+          {/* Main Content */}
+          <div>
+            <p className="text-sm font-medium text-gray-800">Successfully staked {amount} cUSD to {stakingPool}.</p>
+            <p className="text-sm text-gray-600">
+              <a
+                href={`https://celoscan.io/tx/${result.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline hover:text-blue-600 transition-colors"
+              >
+                Explore on CeloScan
+              </a>
+            </p>
+          </div>
+        </div>,
+        {
+          className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
+          style: {
+            borderLeft: "4px solid #34C759", // Green border for success
+          },
+          duration: 5000,
+        }
       );
-      setLoading(false);
-      //result.hash
-      //https://app.uniswap.org/explore/pools/celo/0x34757893070B0FC5de37AaF2844255fF90F7F1E0
-      //https://app.uniswap.org/explore/pools/celo/0x1c8DafD358d308b880F71eDB5170B010b106Ca60
+      setIsStaking(false);
     } catch (error) {
       console.log("Staking failed:", error);
       toast.error("Staking failed. Please try again.");
     } finally {
-      setLoading(false);
+      setIsStaking(false);
     }
   };
 
@@ -343,13 +371,14 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {fetching || !stablecoinPools && (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-green-500">
-                    Loading...
-                  </td>
-                </tr>
-              )}
+              {fetching ||
+                (!stablecoinPools && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-green-500">
+                      Loading...
+                    </td>
+                  </tr>
+                ))}
               {!fetching && stablecoinPools?.length === 0 && (
                 <tr>
                   <td colSpan={5} className="text-center py-4 text-gray-400">
@@ -380,7 +409,8 @@ export default function Home() {
                           if (pool.project === "uniswap-v3") {
                             goToUniswap();
                           } else {
-                            setStakingPool(pool.pool);
+                            setStakingPool(pool.project);
+                            setStakingPoolSpec(pool.pool);
                             setShowStakingModal(true);
                           }
                         }}
@@ -415,11 +445,13 @@ export default function Home() {
       )}
       {showStakingModal && (
         <StakeModal
-          showStakingModal={showStakingModal}
+          stakingPoolSpec={stakingPoolSpec}
           setShowStakingModal={setShowStakingModal}
           stakingPool={stakingPool}
           balance={Number(balance)}
           handleStake={handleStake}
+          isStaking={isStaking}
+          showingText={buttonText}
         />
       )}
     </div>

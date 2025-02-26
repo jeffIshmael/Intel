@@ -107,7 +107,7 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
         <div className="flex justify-center mt-4 space-x-4">
           <button
             className={`py-2 px-6 rounded-lg ${
-              signUp ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"
+              signUp ? "bg-blue-600 text-white" : loading ? "cursor-not-allowed opacity-50": "bg-gray-700 text-gray-300"
             }`}
             disabled={loading}
             onClick={() => setSignUp(true)}
@@ -116,7 +116,7 @@ const SignUp = ({ onClose }: { onClose: () => void }) => {
           </button>
           <button
             className={`py-2 px-6 rounded-lg ${
-              !signUp ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-300"
+              !signUp ? "bg-blue-600 text-white" : loading ? "cursor-not-allowed opacity-50": "bg-gray-700 text-gray-300"
             }`}
             onClick={() => setSignUp(false)}
             disabled={loading}
