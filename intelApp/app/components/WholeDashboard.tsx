@@ -125,27 +125,33 @@ const WholeDashboard = () => {
           },
         });
         const data = await response.json();
-        console.log(data);
+
         if (data) {
+          // Update pools and best pools
           setStakingPools(data.allPools);
           setBestPool(data.bestCUSDPool);
           setBestAIStakingPool(data.bestNonUniswapV3Pool);
-          setCurrentPool(
-            data.allPools.filter((pool: Pool) => pool.pool === stakedPool)[0]
+
+          // Find the current pool based on `stakedPool`
+          const currentPoolFromData = data.allPools.find(
+            (pool: Pool) => pool.pool === stakedPool
           );
-          setFetching(false);
-          console.log(currentPool);
-          console.log(bestAIStakingPool);
+          if (currentPoolFromData) {
+            setCurrentPool(currentPoolFromData);
+          }
         }
       } catch (error) {
-        console.log(error);
-        setFetching(false);
+        console.error("Error fetching pools:", error);
       } finally {
         setFetching(false);
       }
     };
-    fetchPools();
-  }, [user?.id, stakedPool,bestAIStakingPool,currentPool]);
+
+    // Only fetch pools when `user?.id` or `stakedPool` changes
+    if (user?.id || stakedPool) {
+      fetchPools();
+    }
+  }, [user?.id, stakedPool]); // Removed `bestAIStakingPool` and `currentPool` from dependencies
 
   const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
@@ -480,7 +486,7 @@ const WholeDashboard = () => {
                 <button
                   onClick={async () => {
                     try {
-                      await signOut({ callbackUrl: "/" }); 
+                      await signOut({ callbackUrl: "/" });
                     } catch (error) {
                       console.error("Sign-out failed:", error);
                     }
