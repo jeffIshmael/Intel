@@ -63,7 +63,7 @@ The primary objectives of Intel are:
 
 ## Demo
 1. To create your Intel account, visit our live website: [https://intel-mocha.vercel.app/](https://intel-mocha.vercel.app).
-2. Watch our video demo here: [Video Link](https://www.loom.com/share/d11d0b493d004c4bb009d7c96f5d9278?sid=8a174ba1-2d7b-4261-ab50-d22cec87ccd9).
+2. Watch our video demo here: [Video Link](https://www.loom.com/share/aadaaf0a38424c4cb9dea7912257fa29?sid=3221ad2b-e1de-4f06-9633-58714866d7f1).
 
 ---
 

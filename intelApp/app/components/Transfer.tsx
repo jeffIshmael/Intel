@@ -1,3 +1,4 @@
+"use client"
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { ethers } from "ethers";
 import React from "react";
@@ -7,7 +8,7 @@ declare global {
     ethereum: MetaMaskInpageProvider;
   }
 }
-const Transfer = ({amount, address}:{amount:number, address:string}) => {
+const Transfer = async ({amount, address}:{amount:number, address:string}) => {
   const TransferCUSD = async (amount: number) => {
     console.log("Transfering ...");
 
@@ -47,7 +48,7 @@ const Transfer = ({amount, address}:{amount:number, address:string}) => {
       onClick={()=>TransferCUSD(amount)}
       
       >
-        Transffer
+        Transfer
       </button>
     </div>
   );

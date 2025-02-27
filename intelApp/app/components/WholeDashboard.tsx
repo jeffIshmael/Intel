@@ -151,7 +151,7 @@ const WholeDashboard = () => {
     if (user?.id || stakedPool) {
       fetchPools();
     }
-  }, [user?.id, stakedPool]); // Removed `bestAIStakingPool` and `currentPool` from dependencies
+  }, [user?.id, stakedPool]);
 
   const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
@@ -402,7 +402,7 @@ const WholeDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="bg-gray-900 text-white min-h-screen font-sans p-2">
       <div className="flex justify-between items-center mb-6">
         <div className="flex flex-col-2 space-x-6">
           <FaHome
@@ -529,45 +529,43 @@ const WholeDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-1 md:grid-cols-2">
-        {/* wallet section */}
-
-        <TransferModal
-          balance={Number(balance) / 10 ** 18}
-          aiBalance={Number(user?.aiBalance ?? 0)}
-          address={user?.address ?? ""}
-          userId={(user?.id ?? "defaultId").toString()}
-          poolSpec={bestAIStakingPool?.pool ?? ""}
-          poolName={bestAIStakingPool?.project ?? ""}
-          stake={handleAIStaking}
-        />
-
-        {/* staked pool section */}
-        <div className="bg-gray-700 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
-          <h1 className="text-xl font-semibold mb-4">Current Staked Pool</h1>
-          {user?.staked ? (
-            <div className="bg-gray-800 p-5 rounded-lg shadow-md">
-              <h2 className="text-lg font-bold text-green-400">
-                {currentPool?.project ?? ""}
-              </h2>
-
-              <p className="text-sm text-gray-400 mt-1">
-                Annual Percentage Yield (APY)
-              </p>
-              <p className="text-2xl font-semibold text-green-500">
-                {currentPool?.apyBase}
-              </p>
-
-              <p className="text-sm text-gray-400 mt-2">Amount Staked</p>
-              <p className="text-xl font-bold">
-                {Number(amountStaked) / 10 ** 18} cUSD
-              </p>
-            </div>
-          ) : (
-            <p className="text-gray-400">No pool staked yet</p>
-          )}
+      <section className="" >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* wallet section */}
+          <TransferModal
+            balance={Number(balance) / 10 ** 18}
+            aiBalance={Number(user?.aiBalance ?? 0)}
+            address={user?.address ?? ""}
+            userId={(user?.id ?? "defaultId").toString()}
+            poolSpec={bestAIStakingPool?.pool ?? ""}
+            poolName={bestAIStakingPool?.project ?? ""}
+            stake={handleAIStaking}
+          />
+          {/* staked pool section */}
+          <div className="bg-gray-700 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
+            <h1 className="text-xl font-semibold mb-4">Current Staked Pool</h1>
+            {user?.staked ? (
+              <div className="bg-gray-800 p-5 rounded-lg shadow-md">
+                <h2 className="text-lg font-bold text-green-400">
+                  {currentPool?.project ?? ""}
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Annual Percentage Yield (APY)
+                </p>
+                <p className="text-2xl font-semibold text-green-500">
+                  {currentPool?.apyBase}
+                </p>
+                <p className="text-sm text-gray-400 mt-2">Amount Staked</p>
+                <p className="text-xl font-bold">
+                  {Number(amountStaked) / 10 ** 18} cUSD
+                </p>
+              </div>
+            ) : (
+              <p className="text-gray-400">No pool staked yet</p>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* best to stake section */}
       <div className="bg-gray-800 mt-6 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
@@ -620,9 +618,12 @@ const WholeDashboard = () => {
 
       {/* Top Staking Pools Section */}
       <section className="mt-12 px-6">
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">🔥 Top Staking Pools</h2>
-          <div className="overflow-x-auto">
+        <div >
+          <h2 className="text-2xl text-center font-semibold mb-6 border-b border-gray-200 dark:border-gray-700">
+            <span >🔥 Top Staking Pools</span>
+          </h2>
+       
+          <div className="overflow-x-auto ">
             <table className="min-w-full overflow-hidden">
               <thead>
                 <tr className="bg-gray-200 dark:bg-gray-700 text-left">
