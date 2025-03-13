@@ -15,7 +15,7 @@ import Header from "./components/Header";
 import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
-import Transfer from "./components/Transfer";
+
 
 const contract = getContract({
   client,
@@ -27,12 +27,6 @@ declare global {
   interface Window {
     ethereum: MetaMaskInpageProvider;
   }
-}
-
-interface AIBest{
-  id:string;
-name: string;
-reason:string;
 }
 
 interface Pool {
