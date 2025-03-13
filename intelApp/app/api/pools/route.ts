@@ -2,6 +2,8 @@
 //It is fetching from DeFiLlama API
 import { NextResponse } from "next/server";
 
+
+
 interface Pool {
   apy: number;
   apyBase: number;
@@ -104,4 +106,82 @@ export const GET = async () => {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 };
+
+//Using nebula AI to get the best staking pool
+//Base URL = https://nebula-api.thirdweb.com
+export async function POST() {
+  const nebulaSecret = process.env.THIRDWEB_SECRET_KEY;
+  if (!nebulaSecret) {
+    return NextResponse.json({ error: "Secret key not set" }, { status: 500 });
+  }
+
+  let pools: Pool[] | null = null; // Define pools properly
+
+  try {
+    const result = await fetchWithRetry("https://yields.llama.fi/pools");
+
+    if (Array.isArray(result.data)) {
+      const celoPools = result.data.filter(
+        (pool: Pool) => pool.chain?.toLowerCase() === "celo"
+      );
+
+      const allStablecoinPools = celoPools.filter(
+        (pool: Pool) => pool.stablecoin === true
+      );
+
+      const cUSDStableCoins = allStablecoinPools
+        .filter((pool: Pool) => pool.symbol && pool.symbol.includes("CUSD"))
+        .sort((a: Pool, b: Pool) =>
+          b.apy !== a.apy ? b.apy - a.apy : b.tvlUsd - a.tvlUsd
+        );
+
+      pools = cUSDStableCoins; // Assign to outer variable
+    }
+  } catch (e) {
+    console.log("Error fetching pools:", e);
+    return NextResponse.json({ error: "Failed to fetch pools" }, { status: 500 });
+  }
+
+  if (!pools || pools.length === 0) {
+    return NextResponse.json({ error: "No pools found" }, { status: 404 });
+  }
+
+  try {
+    const formattedPools = pools
+      .map((pool) => `- ${pool.pool} (${pool.project}) [${pool.poolMeta || "No ID"}]`)
+      .join("\n");
+
+    const response = await fetch("https://nebula-api.thirdweb.com/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-secret-key": nebulaSecret,
+      },
+      body: JSON.stringify({
+        message: `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`,
+      }),
+    });
+
+    const data = await response.json();
+    const message = data.message || "";
+
+    // Extract the best pool name and reason
+    const match = message.match(/^(.*?) \[(.*?)\]\n(.*)$/);
+    if (!match) {
+      return NextResponse.json({ error: "Invalid AI response format" }, { status: 500 });
+    }
+
+    const bestPool = {
+      name: match[1].trim(),
+      id: match[2].trim(),
+      reason: match[3].trim(),
+    };
+
+    return NextResponse.json({ bestPool, allPools: pools });
+  } catch (error) {
+    console.error("Nebula API call failed:", error);
+    return NextResponse.json({ error: "API call failed" }, { status: 500 });
+  }
+}
+
 

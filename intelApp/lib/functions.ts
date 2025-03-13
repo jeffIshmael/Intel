@@ -216,3 +216,30 @@ export async function updateAIBalance(
     throw error;
   }
 }
+
+//function to handle unstaking
+export async function updateUnstaking(userId:number){
+  try{
+    //update user details
+    const existingUser = await prisma.user.findUnique({
+      where:{
+        id:userId
+      }
+    })
+    if(existingUser){
+      await prisma.user.update({
+        where:{
+          id: existingUser.id
+        },
+        data:{
+        staked: false,       
+        }
+      })
+    }else{
+      console.log("User not found.")
+    }
+
+  }catch(error){
+    console.log(error);
+  }
+}
