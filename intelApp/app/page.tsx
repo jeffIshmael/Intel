@@ -16,6 +16,7 @@ import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
 
+
 const contract = getContract({
   client,
   address: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
@@ -69,7 +70,8 @@ export default function Home() {
   const [buttonText, setButtonText] = useState("...");
   const [fetching, setFetching] = useState(false);
   const [isStaking, setIsStaking] = useState(false);
-  const[stakingPoolSpec,setStakingPoolSpec] = useState("");
+  const [stakingPoolSpec, setStakingPoolSpec] = useState("");
+  const[reason, setReason] = useState("");
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -82,7 +84,7 @@ export default function Home() {
       try {
         setFetching(true);
         const response = await fetch("/api/pools", {
-          method: "GET",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
@@ -91,7 +93,10 @@ export default function Home() {
         console.log(data);
         if (data) {
           setStablecoinPools(data.allPools);
-          setBestPool(data.bestCUSDPool);
+          const intelAIsBest = (data.allPools).filter((pool:Pool) => pool.pool === (data.bestPool).id);
+          console.log(intelAIsBest);
+          setBestPool(intelAIsBest);
+          setReason(data.bestPool.reason);
           setFetching(false);
         }
       } catch (error) {
@@ -158,8 +163,8 @@ export default function Home() {
     );
     await tx.wait();
 
-    toast("cUSD Transfer Approved!!",{
-      description: "Now staking..."
+    toast("cUSD Transfer Approved!!", {
+      description: "Now staking...",
     });
 
     setButtonText("checking allowance...");
@@ -237,10 +242,12 @@ export default function Home() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-      
+
           {/* Main Content */}
           <div>
-            <p className="text-sm font-medium text-gray-800">Successfully staked {amount} cUSD to {stakingPool}.</p>
+            <p className="text-sm font-medium text-gray-800">
+              Successfully staked {amount} cUSD to {stakingPool}.
+            </p>
             <p className="text-sm text-gray-600">
               <a
                 href={`https://celoscan.io/tx/${result.hash}`}
@@ -324,11 +331,15 @@ export default function Home() {
             <p className="text-gray-300 font-semibold">{bestPool?.project}</p>
             <p className="text-gray-300">{bestPool?.symbol}</p>
             <p className="text-green-400 text-lg font-bold">
-              APY: {bestPool?.apy.toFixed(2)}%
+              APY: {bestPool?.apy?.toFixed(2)}%
             </p>
             <p className="text-gray-300">
-              TVL: ${bestPool?.tvlUsd.toLocaleString()}
+              TVL: ${bestPool?.tvlUsd?.toLocaleString()}
             </p>
+            <p className="text-gray-300">
+              AI`&apos;`s reason: ${reason}
+            </p>
+
             <button
               className={` px-5 py-2 rounded-md text-white ${
                 bestPool?.project !== "uniswap-v3"

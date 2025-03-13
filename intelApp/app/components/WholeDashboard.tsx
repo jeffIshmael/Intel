@@ -16,6 +16,7 @@ import {
   createTransaction,
   updateStakedPool,
   getCurrentStakedPool,
+  updateUnstaking,
 } from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
@@ -86,8 +87,10 @@ const WholeDashboard = () => {
   const [amountStaked, setAmountStaked] = useState(0);
   const [fetching, setFetching] = useState(false);
   const [buttonText, setButtonText] = useState("");
+  const [unstakingButtonText, setUnstakingButtonText] = useState("");
   const [stakingPoolSpec, setStakingPoolSpec] = useState("");
   const [isStaking, setIsStaking] = useState(false);
+  const [unstaking, setUnstaking] = useState(false);
   const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
   const { data: session } = useSession();
   const { data: balance } = useReadContract({
@@ -153,6 +156,7 @@ const WholeDashboard = () => {
     }
   }, [user?.id, stakedPool]);
 
+  //function to approve cUSD sending to a pool
   const approveCUSD = async (amount: number, signer: Signer) => {
     console.log("Approving cUSD...");
     setButtonText("Approving cUSD transfer...");
@@ -197,6 +201,7 @@ const WholeDashboard = () => {
     }
   };
 
+ //function to stake cUSD to a pool
   const stakeCUSD = async (amount: number, signer: Signer) => {
     setButtonText("Staking...");
 
@@ -231,6 +236,42 @@ const WholeDashboard = () => {
 
     const txFull = await tx.wait();
     console.log("Staked in Moola Market!", txFull);
+    return txFull;
+  };
+
+  //function to unstake cUSD from a pool(manually)
+  const unStakeCUSD = async (amount: number, signer: Signer) => {
+    setUnstakingButtonText("Unstaking...");
+
+    const moolaMarket = new ethers.Contract(
+      "0x970b12522CA9b4054807a2c5B736149a5BE6f670", // Moola Market Proxy
+      [
+        "function withdraw(address asset, uint256 amount, address to) external",
+      ],
+      signer
+    );
+
+    const parsedAmount = ethers.parseUnits(amount.toString(), 18);
+
+    // Estimate gas (optional)
+    const gasEstimate = await moolaMarket.withdraw.estimateGas(
+      "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Address
+      parsedAmount,
+      await signer.getAddress(),
+    );
+
+    console.log(`Estimated Gas: ${gasEstimate.toString()}`);
+
+    // Send the transaction
+    const tx = await moolaMarket.withdraw(
+      "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Address
+      parsedAmount,
+      await signer.getAddress(), // onBehalfOf
+      { gasLimit: gasEstimate }
+    );
+
+    const txFull = await tx.wait();
+    console.log("UnStaked from Moola Market!", txFull);
     return txFull;
   };
 
@@ -389,7 +430,6 @@ const WholeDashboard = () => {
       setIsStaking(false);
     }
   };
-
   // Copy wallet address
   const copyToClipboard = () => {
     const address = user?.address || "";
@@ -400,6 +440,79 @@ const WholeDashboard = () => {
   const goToUniswap = () => {
     window.open(`https://app.uniswap.org/explore/pools/celo`, "_blank");
   };
+
+  //function to handle unstaking
+  const handleUnstaking = async (amount:number, poolName:string) =>{
+    const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
+    const privateKey = user?.privateKey ?? "";
+    const signer = new ethers.Wallet(privateKey, provider);
+    try {
+      setUnstaking(true);
+      const txHash = await unStakeCUSD(amount,signer);
+      if (txHash){
+        const transaction = await createTransaction(
+          user?.id ?? 0,
+          txHash.hash,
+          "You unStaked",
+          amount
+        );
+        console.log(transaction);
+        await updateUnstaking(
+          user?.id ?? 0,
+        );
+        toast.success(
+          <div className="flex items-center space-x-4">
+            {/* Icon for visual appeal */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-green-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+
+            {/* Main Content */}
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                Successfully unstaked {amount} cUSD from {poolName}.
+              </p>
+              <p className="text-sm text-gray-600">
+                <a
+                  href={`https://celoscan.io/tx/${txHash.hash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
+                >
+                  Explore on CeloScan
+                </a>
+              </p>
+            </div>
+          </div>,
+          {
+            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
+            style: {
+              borderLeft: "4px solid #34C759", // Green border for success
+            },
+            duration: 5000,
+          });
+          setUnstaking(false);
+
+      }
+    }catch(error){
+      console.log(error);
+      setUnstaking(false);
+    }finally{
+      setUnstaking(false);
+    }
+
+  }
 
   return (
     <div className="bg-gray-900 text-white min-h-screen font-sans p-2">
@@ -559,6 +672,9 @@ const WholeDashboard = () => {
                 <p className="text-xl font-bold">
                   {Number(amountStaked) / 10 ** 18} cUSD
                 </p>
+                <button className="bg-red-400 p-2 rounded-md" onClick={()=>handleUnstaking(Number(amountStaked) / 10 ** 18,currentPool?.project ?? "")}  >
+                  {unstaking?unstakingButtonText:"Unstake"}
+                </button>
               </div>
             ) : (
               <p className="text-gray-400">No pool staked yet</p>
