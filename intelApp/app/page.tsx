@@ -85,7 +85,7 @@ export default function Home() {
     const fetchPools = async () => {
       try {
         setFetching(true);
-        const response = await fetch("/api/pools", {
+        const response = await fetch(`${window.location.origin}/api/pools`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

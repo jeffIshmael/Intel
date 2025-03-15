@@ -2,8 +2,6 @@
 //It is fetching from DeFiLlama API
 import { NextResponse } from "next/server";
 
-
-
 interface Pool {
   apy: number;
   apyBase: number;
