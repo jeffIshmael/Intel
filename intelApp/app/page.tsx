@@ -15,6 +15,7 @@ import Header from "./components/Header";
 import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
+import Link from "next/link";
 
 
 const contract = getContract({
@@ -72,6 +73,7 @@ export default function Home() {
   const [isStaking, setIsStaking] = useState(false);
   const [stakingPoolSpec, setStakingPoolSpec] = useState("");
   const[reason, setReason] = useState("");
+  const [showReason, setShowReason]= useState(false);
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -94,8 +96,8 @@ export default function Home() {
         if (data) {
           setStablecoinPools(data.allPools);
           const intelAIsBest = (data.allPools).filter((pool:Pool) => pool.pool === (data.bestPool).id);
-          console.log(intelAIsBest);
-          setBestPool(intelAIsBest);
+          console.log(intelAIsBest[0]);
+          setBestPool(intelAIsBest[0]);
           setReason(data.bestPool.reason);
           setFetching(false);
         }
@@ -300,7 +302,7 @@ export default function Home() {
           Try Intel AI
         </button>
       </div>
-      <section className="flex flex-wrap justify-center gap-6 px-6">
+      <section className="flex flex-wrap justify-center gap-10 px-6">
         <div className="bg-gray-800 p-6 w-80 rounded-lg shadow-lg text-center">
           <FaWallet className="text-blue-400 text-4xl mb-3" />
           <h2 className="text-lg font-semibold">Your Balance</h2>
@@ -328,7 +330,7 @@ export default function Home() {
           <div className="bg-gray-800 p-6 w-80 rounded-lg shadow-lg text-center">
             <FaChartLine className="text-green-400 text-4xl mb-3" />
             <h2 className="text-lg font-bold">Best Stablecoin Pool</h2>
-            <p className="text-gray-300 font-semibold">{bestPool?.project}</p>
+            <p className="text-gray-200 font-bold">{bestPool?.project}</p>
             <p className="text-gray-300">{bestPool?.symbol}</p>
             <p className="text-green-400 text-lg font-bold">
               APY: {bestPool?.apy?.toFixed(2)}%
@@ -337,11 +339,24 @@ export default function Home() {
               TVL: ${bestPool?.tvlUsd?.toLocaleString()}
             </p>
             <p className="text-gray-300">
-              AI`&apos;`s reason: ${reason}
+              <span className="font-semibold">AI's reason:</span>{" "}
+              <span className="text-gray-300">
+                {showReason ? (
+                  <span>{reason}</span>
+                ) : (
+                  <Link
+                    href={"#"}
+                    onClick={() => setShowReason(true)}
+                    className="text-blue-500 hover:text-blue-600 underline"
+                  >
+                    Read
+                  </Link>
+                )}
+              </span>
             </p>
 
             <button
-              className={` px-5 py-2 rounded-md text-white ${
+              className={` px-5 py-2 rounded-md text-white mt-2 ${
                 bestPool?.project !== "uniswap-v3"
                   ? "bg-green-500 hover:bg-green-600"
                   : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
@@ -356,7 +371,7 @@ export default function Home() {
               }}
             >
               {bestPool?.project === "uniswap-v3" ? (
-                <span className="flex flex-col-2 gap-x-1 items-center">
+                <span className="flex flex-col-2 gap-x-1 items-center ">
                   Go to Uniswap <FaArrowUpRightFromSquare />
                 </span>
               ) : (
