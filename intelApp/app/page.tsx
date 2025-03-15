@@ -339,7 +339,7 @@ export default function Home() {
               TVL: ${bestPool?.tvlUsd?.toLocaleString()}
             </p>
             <p className="text-gray-300">
-              <span className="font-semibold">AI's reason:</span>{" "}
+              <span className="font-semibold">AI&apos;s reason:</span>{" "}
               <span className="text-gray-300">
                 {showReason ? (
                   <span>{reason}</span>
