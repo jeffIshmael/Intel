@@ -359,7 +359,7 @@ export default function Home() {
         {stablecoinPools && (
           <div className="bg-gray-800 p-6 w-80 rounded-lg shadow-lg text-center">
             <FaChartLine className="text-green-400 text-4xl mb-3" />
-            <h2 className="text-lg font-bold">Best Stablecoin Pool</h2>
+            <h2 className="text-lg font-bold">✅ Best Stablecoin Pool</h2>
             {fetchingPool ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 mt-6 border-green-400"></div>
