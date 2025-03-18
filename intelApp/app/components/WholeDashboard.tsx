@@ -137,7 +137,7 @@ const WholeDashboard = () => {
           // Update pools and best pools
           setStablecoinPools(data.cUSDStableCoins);
           // setBestPool(data.bestCUSDPool);
-          // setBestAIStakingPool(data.bestNonUniswapV3Pool);
+          
 
           // Find the current pool based on `stakedPool`
           const currentPoolFromData = data.cUSDStableCoins.find(
@@ -182,6 +182,7 @@ const WholeDashboard = () => {
           );
           console.log(intelAIsBest[0]);
           setBestPool(intelAIsBest[0]);
+          setBestAIStakingPool(intelAIsBest[0]);
           setReason(data.bestPool.reason);
           setFetchingPool(false);
         }
