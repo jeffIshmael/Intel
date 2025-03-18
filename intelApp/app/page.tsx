@@ -116,17 +116,28 @@ export default function Home() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            stablecoinPools,
-          }),
+          body: JSON.stringify({ stablecoinPools }),
         });
-        if (!response.ok) {
-          const errorText = await response.text(); // Get error message
-          console.error("API Error:", errorText);
+
+        let data;
+        const textData = await response.text(); // Read once
+
+        try {
+          data = JSON.parse(textData); // Try parsing JSON
+        } catch {
+          console.error("API returned non-JSON response:", textData);
           toast.error("Failed to fetch best pool");
+          return;
         }
-        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("API Error:", data);
+          toast.error(data.error || "Failed to fetch best pool");
+          return;
+        }
+
         console.log(data);
+
         if (data && stablecoinPools) {
           const intelAIsBest = stablecoinPools.filter(
             (pool: Pool) => pool.pool === data.bestPool.id
@@ -134,7 +145,6 @@ export default function Home() {
           console.log(intelAIsBest[0]);
           setBestPool(intelAIsBest[0]);
           setReason(data.bestPool.reason);
-          setFetchingPool(false);
         }
       } catch (error) {
         setFetchingPool(false);
