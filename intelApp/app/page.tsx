@@ -74,6 +74,7 @@ export default function Home() {
   const [stakingPoolSpec, setStakingPoolSpec] = useState("");
   const[reason, setReason] = useState("");
   const [showReason, setShowReason]= useState(false);
+  const [fetchingPool, setFetchingPool] = useState(false);
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -85,8 +86,8 @@ export default function Home() {
     const fetchPools = async () => {
       try {
         setFetching(true);
-        const response = await fetch(`${window.location.origin}/api/pools`, {
-          method: "POST",
+        const response = await fetch("/api/pools", {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
@@ -94,11 +95,7 @@ export default function Home() {
         const data = await response.json();
         console.log(data);
         if (data) {
-          setStablecoinPools(data.allPools);
-          const intelAIsBest = (data.allPools).filter((pool:Pool) => pool.pool === (data.bestPool).id);
-          console.log(intelAIsBest[0]);
-          setBestPool(intelAIsBest[0]);
-          setReason(data.bestPool.reason);
+          setStablecoinPools(data.cUSDStableCoins);
           setFetching(false);
         }
       } catch (error) {
@@ -110,6 +107,38 @@ export default function Home() {
     };
     fetchPools();
   }, []);
+
+  useEffect(() =>{
+    const getBestPool = async() =>{
+      try {
+        setFetchingPool(true);
+        const response = await fetch("/api/pools", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            stablecoinPools
+          })
+        });
+        const data = await response.json();
+        console.log(data);
+        if (data && stablecoinPools) {         
+          const intelAIsBest = (stablecoinPools).filter((pool:Pool) => pool.pool === (data.bestPool).id);
+          console.log(intelAIsBest[0]);
+          setBestPool(intelAIsBest[0]);
+          setReason(data.bestPool.reason);
+          setFetchingPool(false);
+        }
+      } catch (error) {
+        setFetchingPool(false);
+        console.log(error);
+      } finally {
+        setFetchingPool(false);
+      }
+    };
+    getBestPool();
+  },[stablecoinPools])
 
   useEffect(() => {
     console.log(balance);
