@@ -108,53 +108,56 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const getBestPool = async () => {
-      try {
-        setFetchingPool(true);
-        const response = await fetch("/api/pools", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ stablecoinPools }),
-        });
-
-        let data;
-        console.log(response);
-        const textData = await response.text(); // Read once
-
+    if (stablecoinPools) {
+      const getBestPool = async () => {
         try {
-          data = JSON.parse(textData); // Try parsing JSON
-        } catch {
-          console.error("API returned non-JSON response:", textData);
-          toast.error("Failed to fetch best pool");
-          return;
-        }
+          setFetchingPool(true);
+          const response = await fetch("/api/pools", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ stablecoinPools }),
+          });
 
-        if (!response.ok) {
-          console.log("API Error:", data);
-          toast.error(data.error || "Failed to fetch best pool");
-          return;
-        }
+          let data;
+          console.log(response);
+          const textData = await response.text(); // Read once
 
-        console.log(data);
+          try {
+            data = JSON.parse(textData); // Try parsing JSON
+          } catch {
+            console.error("API returned non-JSON response:", textData);
+            toast.error("Failed to fetch best pool");
+            return;
+          }
 
-        if (data && stablecoinPools) {
-          const intelAIsBest = stablecoinPools.filter(
-            (pool: Pool) => pool.pool === data.bestPool.id
-          );
-          console.log(intelAIsBest[0]);
-          setBestPool(intelAIsBest[0]);
-          setReason(data.bestPool.reason);
+          if (!response.ok) {
+            console.log("API Error:", data);
+            toast.error(data.error || "Failed to fetch best pool");
+            return;
+          }
+
+          console.log(data);
+
+          if (data && stablecoinPools) {
+            const intelAIsBest = stablecoinPools.filter(
+              (pool: Pool) => pool.pool === data.bestPool.id
+            );
+            console.log(intelAIsBest[0]);
+            setBestPool(intelAIsBest[0]);
+            setReason(data.bestPool.reason);
+          }
+        } catch (error) {
+          setFetchingPool(false);
+          console.log(error);
+        } finally {
+          setFetchingPool(false);
         }
-      } catch (error) {
-        setFetchingPool(false);
-        console.log(error);
-      } finally {
-        setFetchingPool(false);
-      }
-    };
-    getBestPool();
+      };
+      getBestPool();
+    }
+    console.log("No pools debug");
   }, [stablecoinPools]);
 
   useEffect(() => {
