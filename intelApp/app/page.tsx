@@ -120,6 +120,11 @@ export default function Home() {
             stablecoinPools,
           }),
         });
+        if (!response.ok) {
+          const errorText = await response.text(); // Get error message
+          console.error("API Error:", errorText);
+          toast.error("Failed to fetch best pool");
+        }
         const data = await response.json();
         console.log(data);
         if (data && stablecoinPools) {
