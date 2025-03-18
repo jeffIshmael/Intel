@@ -137,6 +137,7 @@ export async function POST(request:Request) {
         return NextResponse.json({ bestPool });
       } catch (error) {
         console.error("Nebula API response not JSON:", textData);
+        console.log(error);
         return NextResponse.json({ error: "Invalid response from AI", rawResponse: textData }, { status: 500 });
       }
       
