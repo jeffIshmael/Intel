@@ -120,6 +120,7 @@ export default function Home() {
         });
 
         let data;
+        console.log(response);
         const textData = await response.text(); // Read once
 
         try {

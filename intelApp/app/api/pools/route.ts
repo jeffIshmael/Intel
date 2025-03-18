@@ -134,6 +134,7 @@ export async function POST(request: Request) {
         if (!data.message) throw new Error("No message in API response");
 
         const match = data.message.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+        console.log(match);
 
         if (!match) {
           return NextResponse.json(
@@ -147,6 +148,7 @@ export async function POST(request: Request) {
           id: match[2].trim(),
           reason: match[3].trim(),
         };
+        console.log(bestPool);
 
         return NextResponse.json({ bestPool });
       } catch (error) {
