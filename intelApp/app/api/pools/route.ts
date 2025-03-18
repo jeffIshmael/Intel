@@ -85,7 +85,7 @@ export const GET = async () => {
 };
 
 const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+const timeout = setTimeout(() => controller.abort(), 100000); // 100s timeout
 //Using nebula AI to get the best staking pool
 //Base URL = https://nebula-api.thirdweb.com
 export async function POST(request: Request) {
@@ -130,9 +130,11 @@ export async function POST(request: Request) {
 
       try {
         const data = JSON.parse(textData); // Try parsing JSON
+        console.log(data);
         if (!data.message) throw new Error("No message in API response");
 
-        const match = data.message.match(/^(.*?) \[(.*?)\]\n(.*)$/);
+        const match = data.message.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+
         if (!match) {
           return NextResponse.json(
             { error: "Invalid AI response format", rawResponse: textData },
@@ -149,7 +151,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ bestPool });
       } catch (error) {
         console.error("Nebula API response is not valid JSON:", textData);
-        console.log(error);
+        console.log(error)
         return NextResponse.json(
           { error: "Invalid response from AI", rawResponse: textData },
           { status: 500 }
