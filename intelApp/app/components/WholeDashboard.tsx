@@ -776,7 +776,7 @@ const WholeDashboard = () => {
                 {/* AI Reason */}
                 <div className="text-center">
                   <span className="font-semibold text-gray-300">
-                    AI's reason:
+                    AI&apos;s reason:
                   </span>
                   <span className="text-gray-300 ml-2">
                     {showReason ? (
