@@ -81,6 +81,8 @@ export const GET = async () => {
   }
 };
 
+const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 //Using nebula AI to get the best staking pool
 //Base URL = https://nebula-api.thirdweb.com
 export async function POST(request:Request) {
@@ -104,33 +106,40 @@ export async function POST(request:Request) {
       .map((pool) => `- ${pool.pool} (${pool.project}) [${pool.poolMeta || "No ID"}]`)
       .join("\n");
 
-    const response = await fetch("https://nebula-api.thirdweb.com/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-secret-key": nebulaSecret,
-      },
-      body: JSON.stringify({
-        message: `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`,
-      }),
-    });
-
-    const data = await response.json();
-    const message = data.message || "";
-
-    // Extract the best pool name and reason
-    const match = message.match(/^(.*?) \[(.*?)\]\n(.*)$/);
-    if (!match) {
-      return NextResponse.json({ error: "Invalid AI response format" }, { status: 500 });
-    }
-
-    const bestPool = {
-      name: match[1].trim(),
-      id: match[2].trim(),
-      reason: match[3].trim(),
-    };
-
-    return NextResponse.json({ bestPool });
+      const response = await fetch("https://nebula-api.thirdweb.com/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-secret-key": nebulaSecret,
+        },
+        body: JSON.stringify({
+          message: `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`,
+        }),
+        signal: controller.signal, // Attach signal
+      });
+      clearTimeout(timeout); // Clear timeout on success
+      const textData = await response.text(); // Get response as text
+      try {
+        const data = JSON.parse(textData); // Try parsing JSON
+        const message = data.message || "";
+      
+        const match = message.match(/^(.*?) \[(.*?)\]\n(.*)$/);
+        if (!match) {
+          return NextResponse.json({ error: "Invalid AI response format", rawResponse: textData }, { status: 500 });
+        }
+      
+        const bestPool = {
+          name: match[1].trim(),
+          id: match[2].trim(),
+          reason: match[3].trim(),
+        };
+      
+        return NextResponse.json({ bestPool });
+      } catch (error) {
+        console.error("Nebula API response not JSON:", textData);
+        return NextResponse.json({ error: "Invalid response from AI", rawResponse: textData }, { status: 500 });
+      }
+      
   } catch (error) {
     console.error("Nebula API call failed:", error);
     return NextResponse.json({ error: "API call failed" }, { status: 500 });
