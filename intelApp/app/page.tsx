@@ -123,6 +123,7 @@ export default function Home() {
           let data;
           console.log(response);
           const textData = await response.text(); // Read once
+          console.log(textData);
 
           try {
             data = JSON.parse(textData); // Try parsing JSON
