@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
+import Link from "next/link";
 
 const contract = getContract({
   client,
@@ -76,7 +77,7 @@ interface User {
 const WholeDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [stakingPools, setStakingPools] = useState<Pool[]>([]);
+  const [stablecoinPools, setStablecoinPools] = useState<Pool[] | null>(null);
   const [bestPool, setBestPool] = useState<Pool | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
@@ -88,10 +89,13 @@ const WholeDashboard = () => {
   const [fetching, setFetching] = useState(false);
   const [buttonText, setButtonText] = useState("");
   const [unstakingButtonText, setUnstakingButtonText] = useState("");
-  const [stakingPoolSpec, setStakingPoolSpec] = useState("");
+  const [stablecoinPoolspec, setstablecoinPoolspec] = useState("");
   const [isStaking, setIsStaking] = useState(false);
   const [unstaking, setUnstaking] = useState(false);
   const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
+  const [reason, setReason] = useState("");
+  const [showReason, setShowReason] = useState(false);
+  const [fetchingPool, setFetchingPool] = useState(false);
   const { data: session } = useSession();
   const { data: balance } = useReadContract({
     contract,
@@ -131,12 +135,12 @@ const WholeDashboard = () => {
 
         if (data) {
           // Update pools and best pools
-          setStakingPools(data.allPools);
-          setBestPool(data.bestCUSDPool);
-          setBestAIStakingPool(data.bestNonUniswapV3Pool);
+          setStablecoinPools(data.cUSDStableCoins);
+          // setBestPool(data.bestCUSDPool);
+          
 
           // Find the current pool based on `stakedPool`
-          const currentPoolFromData = data.allPools.find(
+          const currentPoolFromData = data.cUSDStableCoins.find(
             (pool: Pool) => pool.pool === stakedPool
           );
           if (currentPoolFromData) {
@@ -155,6 +159,42 @@ const WholeDashboard = () => {
       fetchPools();
     }
   }, [user?.id, stakedPool]);
+
+  //fetching best pool according to AI
+  useEffect(() => {
+    const getBestPool = async () => {
+      try {
+        setFetchingPool(true);
+        const response = await fetch("/api/pools", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            stablecoinPools,
+          }),
+        });
+        const data = await response.json();
+        console.log(data);
+        if (data && stablecoinPools) {
+          const intelAIsBest = stablecoinPools.filter(
+            (pool: Pool) => pool.pool === data.bestPool.id
+          );
+          console.log(intelAIsBest[0]);
+          setBestPool(intelAIsBest[0]);
+          setBestAIStakingPool(intelAIsBest[0]);
+          setReason(data.bestPool.reason);
+          setFetchingPool(false);
+        }
+      } catch (error) {
+        setFetchingPool(false);
+        console.log(error);
+      } finally {
+        setFetchingPool(false);
+      }
+    };
+    getBestPool();
+  }, [stablecoinPools]);
 
   //function to approve cUSD sending to a pool
   const approveCUSD = async (amount: number, signer: Signer) => {
@@ -201,7 +241,7 @@ const WholeDashboard = () => {
     }
   };
 
- //function to stake cUSD to a pool
+  //function to stake cUSD to a pool
   const stakeCUSD = async (amount: number, signer: Signer) => {
     setButtonText("Staking...");
 
@@ -245,9 +285,7 @@ const WholeDashboard = () => {
 
     const moolaMarket = new ethers.Contract(
       "0x970b12522CA9b4054807a2c5B736149a5BE6f670", // Moola Market Proxy
-      [
-        "function withdraw(address asset, uint256 amount, address to) external",
-      ],
+      ["function withdraw(address asset, uint256 amount, address to) external"],
       signer
     );
 
@@ -257,7 +295,7 @@ const WholeDashboard = () => {
     const gasEstimate = await moolaMarket.withdraw.estimateGas(
       "0x765DE816845861e75A25fCA122bb6898B8B1282a", // cUSD Address
       parsedAmount,
-      await signer.getAddress(),
+      await signer.getAddress()
     );
 
     console.log(`Estimated Gas: ${gasEstimate.toString()}`);
@@ -294,7 +332,7 @@ const WholeDashboard = () => {
         console.log(pool);
         await updateStakedPool(
           user?.id ?? 0,
-          stakingPoolSpec,
+          stablecoinPoolspec,
           BigInt(amount * 10 ** 18)
         );
         toast.success(
@@ -442,14 +480,14 @@ const WholeDashboard = () => {
   };
 
   //function to handle unstaking
-  const handleUnstaking = async (amount:number, poolName:string) =>{
+  const handleUnstaking = async (amount: number, poolName: string) => {
     const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
     const privateKey = user?.privateKey ?? "";
     const signer = new ethers.Wallet(privateKey, provider);
     try {
       setUnstaking(true);
-      const txHash = await unStakeCUSD(amount,signer);
-      if (txHash){
+      const txHash = await unStakeCUSD(amount, signer);
+      if (txHash) {
         const transaction = await createTransaction(
           user?.id ?? 0,
           txHash.hash,
@@ -457,9 +495,7 @@ const WholeDashboard = () => {
           amount
         );
         console.log(transaction);
-        await updateUnstaking(
-          user?.id ?? 0,
-        );
+        await updateUnstaking(user?.id ?? 0);
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -501,18 +537,17 @@ const WholeDashboard = () => {
               borderLeft: "4px solid #34C759", // Green border for success
             },
             duration: 5000,
-          });
-          setUnstaking(false);
-
+          }
+        );
+        setUnstaking(false);
       }
-    }catch(error){
+    } catch (error) {
       console.log(error);
       setUnstaking(false);
-    }finally{
+    } finally {
       setUnstaking(false);
     }
-
-  }
+  };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen font-sans p-2">
@@ -642,7 +677,7 @@ const WholeDashboard = () => {
         </div>
       </div>
 
-      <section className="" >
+      <section className="">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* wallet section */}
           <TransferModal
@@ -672,8 +707,16 @@ const WholeDashboard = () => {
                 <p className="text-xl font-bold">
                   {Number(amountStaked) / 10 ** 18} cUSD
                 </p>
-                <button className="bg-red-400 p-2 rounded-md" onClick={()=>handleUnstaking(Number(amountStaked) / 10 ** 18,currentPool?.project ?? "")}  >
-                  {unstaking?unstakingButtonText:"Unstake"}
+                <button
+                  className="bg-red-400 p-2 rounded-md"
+                  onClick={() =>
+                    handleUnstaking(
+                      Number(amountStaked) / 10 ** 18,
+                      currentPool?.project ?? ""
+                    )
+                  }
+                >
+                  {unstaking ? unstakingButtonText : "Unstake"}
                 </button>
               </div>
             ) : (
@@ -684,28 +727,77 @@ const WholeDashboard = () => {
       </section>
 
       {/* best to stake section */}
-      <div className="bg-gray-800 mt-6 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
-        <h1 className="text-xl font-semibold mb-4">🔥 Best Staking Pool</h1>
-        {fetching ? (
-          <div className="text-gray-300">Loading...</div>
-        ) : (
-          <div className="bg-gray-700 p-5 rounded-lg shadow-md">
-            <h2 className="text-lg font-bold text-blue-400">
-              {bestPool?.project}
-            </h2>
+      <div className="bg-gray-800 mt-6 text-white p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
+        {/* Title Section */}
+        <h1 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-500 mb-6">
+        ✅ Best Staking Pool
+        </h1>
 
-            <p className="text-sm text-gray-400 mt-1">
-              Annual Percentage Yield (APY)
-            </p>
-            <p className="text-2xl font-semibold text-green-500">
-              {bestPool?.apyBase}
-            </p>
+        {stablecoinPools ? (
+          fetchingPool ? (
+            // Loading Spinner
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-4 border-b-4 border-green-400"></div>
+            </div>
+          ) : (
+            // Pool Details Section
+            <div className="bg-gray-700 p-6 rounded-lg shadow-md space-y-4">
+              {/* Project Name */}
+              <h2 className="text-2xl font-bold text-center text-blue-400">
+                {bestPool?.project}
+              </h2>
 
-            <p className="text-sm text-gray-400 mt-2">{bestPool?.symbol}</p>
-            <div className="flex flex-col-2 space-x-4">
-              <p className="text-xl font-bold">{bestPool?.tvlUsd}</p>
+              {/* APY Information */}
+              <div className="space-x-2 flex flex-col-2 ">
+                <p className="text-3xl text-gray-400 text-center">
+                  Annual Percentage Yield (APY): 
+                </p>
+                <p className="text-3xl font-bold text-center text-green-500">
+                  {bestPool?.apyBase}%
+                </p>
+              </div>
+
+              {/* Token Symbol */}
+              <p className="text-3xl text-gray-400 font-bold text-center">
+                {bestPool?.symbol}
+              </p>
+
+              {/* TVL and AI Reason */}
+              <div className="flex flex-col items-center space-y-4">
+              <div className="space-x-2 flex flex-col-2 ">
+                <p className="text-xl font-semibold text-center">
+                    TVL:
+                  </p>
+                  {/* Total Value Locked (TVL) */}
+                  <p className="text-xl font-semibold text-center">
+                    ${bestPool?.tvlUsd?.toLocaleString()}
+                  </p>
+              </div>
+
+                {/* AI Reason */}
+                <div className="text-center">
+                  <span className="font-semibold text-gray-300">
+                    AI&apos;s reason:
+                  </span>
+                  <span className="text-gray-300 ml-2">
+                    {showReason ? (
+                      <span>{reason}</span>
+                    ) : (
+                      <Link
+                        href={"#"}
+                        onClick={() => setShowReason(true)}
+                        className="text-blue-500 hover:text-blue-600 underline cursor-pointer"
+                      >
+                        Read
+                      </Link>
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Button */}
               <button
-                className={`mt-4  text-white font-semibold py-2 px-4 rounded-lg transition mr-0 ${
+                className={`w-full mt-4 text-white font-semibold py-3 px-6 rounded-lg transition ${
                   bestPool?.project !== "uniswap-v3"
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
@@ -720,25 +812,30 @@ const WholeDashboard = () => {
                 }}
               >
                 {bestPool?.project === "uniswap-v3" ? (
-                  <span className="flex flex-col-2 gap-x-1 items-center">
+                  <span className="flex items-center justify-center gap-1">
                     Go to Uniswap <FaArrowUpRightFromSquare />
                   </span>
                 ) : (
-                  "Stake"
+                  "Stake Now"
                 )}
               </button>
             </div>
+          )
+        ) : (
+          // Placeholder for No Pools
+          <div className="text-center text-gray-400">
+            No staking pools available.
           </div>
         )}
       </div>
 
       {/* Top Staking Pools Section */}
       <section className="mt-12 px-6">
-        <div >
+        <div>
           <h2 className="text-2xl text-center font-semibold mb-6 border-b border-gray-200 dark:border-gray-700">
-            <span >🔥 Top Staking Pools</span>
+            <span>🔥 Top Staking Pools</span>
           </h2>
-       
+
           <div className="overflow-x-auto ">
             <table className="min-w-full overflow-hidden">
               <thead>
@@ -753,7 +850,7 @@ const WholeDashboard = () => {
               </thead>
               <tbody>
                 {fetching ||
-                  (!stakingPools && (
+                  (!stablecoinPools && (
                     <tr>
                       <td
                         colSpan={5}
@@ -763,7 +860,7 @@ const WholeDashboard = () => {
                       </td>
                     </tr>
                   ))}
-                {!fetching && stakingPools?.length === 0 && (
+                {!fetching && stablecoinPools?.length === 0 && (
                   <tr>
                     <td colSpan={5} className="text-center py-4 text-gray-400">
                       No staking pools found.
@@ -771,7 +868,7 @@ const WholeDashboard = () => {
                   </tr>
                 )}
                 {!fetching &&
-                  stakingPools?.map((pool, index) => (
+                  stablecoinPools?.map((pool, index) => (
                     <tr
                       key={index}
                       className={`${
@@ -806,7 +903,7 @@ const WholeDashboard = () => {
                               goToUniswap();
                             } else {
                               setPoolToStake(pool.project ?? "");
-                              setStakingPoolSpec(pool.pool ?? "");
+                              setstablecoinPoolspec(pool.pool ?? "");
                               setShowStakingModal(true);
                             }
                           }}
@@ -829,7 +926,7 @@ const WholeDashboard = () => {
       </section>
       {showStakingModal && (
         <StakeModal
-          stakingPoolSpec={stakingPoolSpec}
+          stakingPoolSpec={stablecoinPoolspec}
           setShowStakingModal={setShowStakingModal}
           stakingPool={poolToStake}
           balance={Number(balance)}

@@ -17,7 +17,6 @@ import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
 import Link from "next/link";
 
-
 const contract = getContract({
   client,
   address: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
@@ -72,8 +71,9 @@ export default function Home() {
   const [fetching, setFetching] = useState(false);
   const [isStaking, setIsStaking] = useState(false);
   const [stakingPoolSpec, setStakingPoolSpec] = useState("");
-  const[reason, setReason] = useState("");
-  const [showReason, setShowReason]= useState(false);
+  const [reason, setReason] = useState("");
+  const [showReason, setShowReason] = useState(false);
+  const [fetchingPool, setFetchingPool] = useState(false);
 
   const { data: balance, isLoading } = useReadContract({
     contract,
@@ -85,8 +85,8 @@ export default function Home() {
     const fetchPools = async () => {
       try {
         setFetching(true);
-        const response = await fetch(`${window.location.origin}/api/pools`, {
-          method: "POST",
+        const response = await fetch("/api/pools", {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
@@ -94,11 +94,7 @@ export default function Home() {
         const data = await response.json();
         console.log(data);
         if (data) {
-          setStablecoinPools(data.allPools);
-          const intelAIsBest = (data.allPools).filter((pool:Pool) => pool.pool === (data.bestPool).id);
-          console.log(intelAIsBest[0]);
-          setBestPool(intelAIsBest[0]);
-          setReason(data.bestPool.reason);
+          setStablecoinPools(data.cUSDStableCoins);
           setFetching(false);
         }
       } catch (error) {
@@ -110,6 +106,40 @@ export default function Home() {
     };
     fetchPools();
   }, []);
+
+  useEffect(() => {
+    const getBestPool = async () => {
+      try {
+        setFetchingPool(true);
+        const response = await fetch("/api/pools", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            stablecoinPools,
+          }),
+        });
+        const data = await response.json();
+        console.log(data);
+        if (data && stablecoinPools) {
+          const intelAIsBest = stablecoinPools.filter(
+            (pool: Pool) => pool.pool === data.bestPool.id
+          );
+          console.log(intelAIsBest[0]);
+          setBestPool(intelAIsBest[0]);
+          setReason(data.bestPool.reason);
+          setFetchingPool(false);
+        }
+      } catch (error) {
+        setFetchingPool(false);
+        console.log(error);
+      } finally {
+        setFetchingPool(false);
+      }
+    };
+    getBestPool();
+  }, [stablecoinPools]);
 
   useEffect(() => {
     console.log(balance);
@@ -326,58 +356,67 @@ export default function Home() {
             Deposit
           </button>
         </div>
-        {bestPool && (
+        {stablecoinPools && (
           <div className="bg-gray-800 p-6 w-80 rounded-lg shadow-lg text-center">
             <FaChartLine className="text-green-400 text-4xl mb-3" />
-            <h2 className="text-lg font-bold">Best Stablecoin Pool</h2>
-            <p className="text-gray-200 font-bold">{bestPool?.project}</p>
-            <p className="text-gray-300">{bestPool?.symbol}</p>
-            <p className="text-green-400 text-lg font-bold">
-              APY: {bestPool?.apy?.toFixed(2)}%
-            </p>
-            <p className="text-gray-300">
-              TVL: ${bestPool?.tvlUsd?.toLocaleString()}
-            </p>
-            <p className="text-gray-300">
-              <span className="font-semibold">AI&apos;s reason:</span>{" "}
-              <span className="text-gray-300">
-                {showReason ? (
-                  <span>{reason}</span>
-                ) : (
-                  <Link
-                    href={"#"}
-                    onClick={() => setShowReason(true)}
-                    className="text-blue-500 hover:text-blue-600 underline"
-                  >
-                    Read
-                  </Link>
-                )}
-              </span>
-            </p>
-
-            <button
-              className={` px-5 py-2 rounded-md text-white mt-2 ${
-                bestPool?.project !== "uniswap-v3"
-                  ? "bg-green-500 hover:bg-green-600"
-                  : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
-              }`}
-              onClick={() => {
-                if (bestPool?.project === "uniswap-v3") {
-                  goToUniswap();
-                } else {
-                  setStakingPool(bestPool?.pool);
-                  setShowStakingModal(true);
-                }
-              }}
-            >
-              {bestPool?.project === "uniswap-v3" ? (
-                <span className="flex flex-col-2 gap-x-1 items-center ">
-                  Go to Uniswap <FaArrowUpRightFromSquare />
-                </span>
-              ) : (
-                "Stake"
-              )}
-            </button>
+            <h2 className="text-lg font-bold">✅ Best Stablecoin Pool</h2>
+            {fetchingPool ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 mt-6 border-green-400"></div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-gray-200 font-bold">{bestPool?.project}</p>
+                <p className="text-gray-300">{bestPool?.symbol}</p>
+                <p className="text-green-400 text-lg font-bold">
+                  APY: {bestPool?.apy?.toFixed(2)}%
+                </p>
+                <p className="text-gray-300">
+                  TVL: ${bestPool?.tvlUsd?.toLocaleString()}
+                </p>
+                <p className="text-gray-300">
+                  <span className="font-semibold">AI&apos;s reason:</span>{" "}
+                  <span className="text-gray-300">
+                    {showReason ? (
+                      <span>{reason}</span>
+                    ) : (
+                      <Link
+                        href={"#"}
+                        onClick={() => setShowReason(true)}
+                        className="text-blue-500 hover:text-blue-600 underline"
+                      >
+                        Read
+                      </Link>
+                    )}
+                  </span>
+                </p>
+                <button
+                  className={` px-5 py-2 rounded-md text-white mt-2 ${
+                    bestPool?.project !== "uniswap-v3"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-gray-500 hover:bg-gray-600 border border-gray-400"
+                  }`}
+                  onClick={() => {
+                    if (bestPool?.project === "uniswap-v3") {
+                      goToUniswap();
+                    } else {
+                      if (bestPool?.pool !== undefined) {
+                        setStakingPool(bestPool.pool);
+                      }
+                      setShowStakingModal(true);
+                    }
+                  }}
+                >
+                  {bestPool?.project === "uniswap-v3" ? (
+                    <span className="flex flex-col-2 gap-x-1 items-center ">
+                      Go to Uniswap <FaArrowUpRightFromSquare />
+                    </span>
+                  ) : (
+                    "Stake"
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </section>
