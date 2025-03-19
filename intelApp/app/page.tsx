@@ -108,58 +108,60 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (stablecoinPools) {
-      const getBestPool = async () => {
-        try {
-          setFetchingPool(true);
-          const response = await fetch("/api/pools", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ stablecoinPools }),
-          });
-
-          let data;
-          console.log(response);
-          const textData = await response.text(); // Read once
-          console.log(textData);
-
-          try {
-            data = JSON.parse(textData); // Try parsing JSON
-          } catch {
-            console.error("API returned non-JSON response:", textData);
-            toast.error("Failed to fetch best pool");
-            return;
-          }
-
-          if (!response.ok) {
-            console.log("API Error:", data);
-            toast.error(data.error || "Failed to fetch best pool");
-            return;
-          }
-
-          console.log(data);
-
-          if (data && stablecoinPools) {
-            const intelAIsBest = stablecoinPools.filter(
-              (pool: Pool) => pool.pool === data.bestPool.id
-            );
-            console.log(intelAIsBest[0]);
-            setBestPool(intelAIsBest[0]);
-            setReason(data.bestPool.reason);
-          }
-        } catch (error) {
-          setFetchingPool(false);
-          console.log(error);
-        } finally {
-          setFetchingPool(false);
-        }
-      };
-      getBestPool();
+    if (!stablecoinPools) {
+      console.log("No pools available");
+      return;
     }
-    console.log("No pools debug");
+  
+    const getBestPool = async () => {
+      try {
+        setFetchingPool(true);
+  
+        const response = await fetch("/api/pools", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stablecoinPools }),
+        });
+  
+        const textData = await response.text();
+        console.log("API Response:", textData);
+  
+        let data;
+        try {
+          data = JSON.parse(textData);
+        } catch {
+          console.error("API returned non-JSON response:", textData);
+          toast.error("Failed to fetch best pool");
+          return;
+        }
+  
+        if (!response.ok || !data.bestPool) {
+          console.error("API Error:", data);
+          toast.error(data.error || "Failed to fetch best pool");
+          return;
+        }
+  
+        console.log("Best Pool Data:", data.bestPool);
+  
+        const bestPoolMatch = stablecoinPools.find((pool: Pool) => pool.pool === data.bestPool.id);
+        if (!bestPoolMatch) {
+          console.warn("No matching pool found for AI response");
+          return;
+        }
+  
+        setBestPool(bestPoolMatch);
+        setReason(data.bestPool.reason);
+      } catch (error) {
+        console.error("Fetch failed:", error);
+        toast.error("Error fetching best pool");
+      } finally {
+        setFetchingPool(false);
+      }
+    };
+  
+    getBestPool();
   }, [stablecoinPools]);
+  
 
   useEffect(() => {
     console.log(balance);
