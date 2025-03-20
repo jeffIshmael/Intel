@@ -84,8 +84,8 @@ export const GET = async () => {
   }
 };
 
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+// const controller = new AbortController();
+// const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 //Using nebula AI to get the best staking pool
 //Base URL = https://nebula-api.thirdweb.com
 // export async function POST(request: Request) {
@@ -175,7 +175,7 @@ const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 //     return NextResponse.json({ error: "Pools have ot been done" }, { status: 500 });
 //   }
 // }
-export async function POST(request: Request) {
+export async function POST() {
   const nebulaSecret = process.env.THIRDWEB_SECRET_KEY;
   if (!nebulaSecret) {
     return NextResponse.json({ error: "Secret key not set" }, { status: 500 });
