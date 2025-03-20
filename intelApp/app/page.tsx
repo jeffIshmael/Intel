@@ -129,6 +129,7 @@ export default function Home() {
         let data;
         try {
           data = JSON.parse(textData);
+          console.log(data);
         } catch {
           console.error("API returned non-JSON response:", textData);
           toast.error("Failed to fetch best pool");
@@ -136,7 +137,7 @@ export default function Home() {
         }
   
         if (!response.ok || !data.bestPool) {
-          console.error("API Error:", data);
+          console.log("API Error:", data);
           toast.error(data.error || "Failed to fetch best pool");
           return;
         }
