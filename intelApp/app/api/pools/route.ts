@@ -84,10 +84,111 @@ export const GET = async () => {
   }
 };
 
-const controller = new AbortController();
-const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-//Using nebula AI to get the best staking pool
-//Base URL = https://nebula-api.thirdweb.com
+// const controller = new AbortController();
+// const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+// //Using nebula AI to get the best staking pool
+// //Base URL = https://nebula-api.thirdweb.com
+// export async function POST(request: Request) {
+//   const nebulaSecret = process.env.THIRDWEB_SECRET_KEY;
+//   if (!nebulaSecret) {
+//     return NextResponse.json({ error: "Secret key not set" }, { status: 500 });
+//   }
+//   const requestData = await request.json();
+
+//   const pools: Pool[] | null = requestData.stablecoinPools;
+//   console.log(pools);
+
+//   if (!pools || pools.length === 0) {
+//     return NextResponse.json({ error: "No pools found" }, { status: 404 });
+//   }
+
+//   try {
+//     const formattedPools = pools
+//       .map(
+//         (pool) =>
+//           `- ${pool.pool} (${pool.project}) [${pool.poolMeta || "No ID"}]`
+//       )
+//       .join("\n");
+
+//     try {
+//       const response = await fetch("https://nebula-api.thirdweb.com/chat", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           "x-secret-key": nebulaSecret,
+//         },
+//         body: JSON.stringify({
+//           message: `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`,
+//           stream: true,
+//         }),
+//         signal: controller.signal,
+//       });
+
+//       clearTimeout(timeout);
+//       // if (controller.signal.aborted) {
+//       //   return NextResponse.json(
+//       //     { error: "Request timed out" },
+//       //     { status: 504 }
+//       //   );
+//       // }
+
+//       const textData = await response.text(); // Get raw text response
+//       // const textData = await response.text();
+//       const data = response.ok ? JSON.parse(textData) : null;
+//       console.log("Raw API Response:", textData);
+
+//       try {
+//         // const data = JSON.parse(textData); // Try parsing JSON
+//         console.log(data);
+//         if (!data.message) throw new Error("No message in API response");
+
+//         const match = data.message.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+//         console.log(match);
+
+//         if (!match) {
+//           return NextResponse.json(
+//             { error: "Invalid AI response format", rawResponse: textData },
+//             { status: 500 }
+//           );
+//         }
+
+//         const bestPool = {
+//           name: match[1].trim(),
+//           id: match[2].trim(),
+//           reason: match[3].trim(),
+//         };
+//         console.log(bestPool);
+
+//         return NextResponse.json({ bestPool });
+//       } catch (error) {
+//         console.error("Nebula API response is not valid JSON:", textData);
+//         console.log(error);
+//         return NextResponse.json(
+//           { error: "Invalid response from AI", rawResponse: textData },
+//           { status: 500 }
+//         );
+//       }
+//     } catch (error: any) {
+//       if (error.name === "AbortError") {
+//         return NextResponse.json(
+//           { error: "Request timed out" },
+//           { status: 504 }
+//         );
+//       }
+//       console.error("Nebula API call failed:", error);
+//       return NextResponse.json({ error: "API call failed" }, { status: 500 });
+//     }
+//   } catch (error) {
+//     console.error("No pools gotten:", error);
+//     return NextResponse.json(
+//       { error: "Pools have ot been done" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+//nebula is slow and its causing timeout error 
+//trying openai
 export async function POST(request: Request) {
   const nebulaSecret = process.env.THIRDWEB_SECRET_KEY;
   if (!nebulaSecret) {
@@ -119,12 +220,11 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           message: `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`,
-          // stream: false,
+          stream: true,
         }),
-        signal: controller.signal,
       });
 
-      clearTimeout(timeout);
+
       // if (controller.signal.aborted) {
       //   return NextResponse.json(
       //     { error: "Request timed out" },
@@ -133,10 +233,12 @@ export async function POST(request: Request) {
       // }
 
       const textData = await response.text(); // Get raw text response
+      // const textData = await response.text();
+      const data = response.ok ? JSON.parse(textData) : null;
       console.log("Raw API Response:", textData);
 
       try {
-        const data = JSON.parse(textData); // Try parsing JSON
+        // const data = JSON.parse(textData); // Try parsing JSON
         console.log(data);
         if (!data.message) throw new Error("No message in API response");
 
@@ -166,13 +268,21 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        return NextResponse.json(
+          { error: "Request timed out" },
+          { status: 504 }
+        );
+      }
       console.error("Nebula API call failed:", error);
       return NextResponse.json({ error: "API call failed" }, { status: 500 });
     }
   } catch (error) {
     console.error("No pools gotten:", error);
-    return NextResponse.json({ error: "Pools have ot been done" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Pools have ot been done" },
+      { status: 500 }
+    );
   }
 }
-
