@@ -268,13 +268,13 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-    } catch (error: any) {
-      if (error.name === "AbortError") {
-        return NextResponse.json(
-          { error: "Request timed out" },
-          { status: 504 }
-        );
-      }
+    } catch (error) {
+      // if (error.name === "AbortError") {
+      //   return NextResponse.json(
+      //     { error: "Request timed out" },
+      //     { status: 504 }
+      //   );
+      // }
       console.error("Nebula API call failed:", error);
       return NextResponse.json({ error: "API call failed" }, { status: 500 });
     }
