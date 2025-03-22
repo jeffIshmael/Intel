@@ -17,6 +17,7 @@ import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
 import Link from "next/link";
 
+
 const contract = getContract({
   client,
   address: "0x765DE816845861e75A25fCA122bb6898B8B1282a",
@@ -112,46 +113,29 @@ export default function Home() {
       console.log("No pools available");
       return;
     }
-  
-    const getBestPool = async () => {
+    const getPool = async () => {
       try {
         setFetchingPool(true);
-  
-        const response = await fetch("/api/pools", {
+        await fetch("/api/bestpool", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stablecoinPools }),
-        });
-  
-        const textData = await response.text();
-        console.log("API Response:", textData);
-  
-        let data;
-        try {
-          data = JSON.parse(textData);
-          console.log(data);
-        } catch {
-          console.error("API returned non-JSON response:", textData);
-          toast.error("Failed to fetch best pool");
-          return;
-        }
-  
-        if (!response.ok || !data.bestPool) {
-          console.log("API Error:", data);
-          toast.error(data.error || "Failed to fetch best pool");
-          return;
-        }
-  
-        console.log("Best Pool Data:", data.bestPool);
-  
-        const bestPoolMatch = stablecoinPools.find((pool: Pool) => pool.pool === data.bestPool.id);
-        if (!bestPoolMatch) {
-          console.warn("No matching pool found for AI response");
-          return;
-        }
-  
-        setBestPool(bestPoolMatch);
-        setReason(data.bestPool.reason);
+          body: JSON.stringify({ stablecoinPools: stablecoinPools }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            const bestPoolMatch = stablecoinPools.find(
+              (pool) => pool.pool === data.id
+            );
+            if (!bestPoolMatch) {
+              console.warn("No matching pool found for AI response");
+              return;
+            }
+
+            setBestPool(bestPoolMatch);
+            setReason(data.reason);
+          })
+          .catch((error) => console.error(error));
       } catch (error) {
         console.error("Fetch failed:", error);
         toast.error("Error fetching best pool");
@@ -159,10 +143,9 @@ export default function Home() {
         setFetchingPool(false);
       }
     };
-  
-    getBestPool();
+
+    getPool();
   }, [stablecoinPools]);
-  
 
   useEffect(() => {
     console.log(balance);
