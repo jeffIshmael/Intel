@@ -1,4 +1,4 @@
-// import { getBestPool } from "@/scripts/Nebula.mjs";
+import { getBestPool } from "@/scripts/Nebula.mjs";
 
 // Handle POST requests
 export async function POST(request) {
@@ -12,8 +12,8 @@ export async function POST(request) {
       });
     }
 
-    // const data = await getBestPool(stablecoinPools);
-    const data = stablecoinPools;
+    const data = await getBestPool(stablecoinPools);
+    // const data = stablecoinPools;
     const match = data.match(/^(.+?) \[(.+?)\]\n(.+)$/);
     console.log(match);
 
