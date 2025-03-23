@@ -10,13 +10,13 @@ import { toast } from "sonner";
 import { ethers } from "ethers";
 import { MetaMaskInpageProvider } from "@metamask/providers";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+import Link from "next/link";
 
 import Header from "./components/Header";
 import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
-import Link from "next/link";
-
+import { getBestPool } from "@/scripts/Nebula.mjs";
 
 const contract = getContract({
   client,
@@ -116,26 +116,23 @@ export default function Home() {
     const getPool = async () => {
       try {
         setFetchingPool(true);
-        await fetch("/api/bestpool", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stablecoinPools: stablecoinPools }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data);
-            const bestPoolMatch = stablecoinPools.find(
-              (pool) => pool.pool === data.id
-            );
-            if (!bestPoolMatch) {
-              console.warn("No matching pool found for AI response");
-              return;
-            }
+        const result = await getBestPool(stablecoinPools);
+        const match = result.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+        const bestPool = {
+          name: match[1].trim(),
+          id: match[2].trim(),
+          reason: match[3].trim(),
+        };
+        const bestPoolMatch = stablecoinPools.find(
+          (pool) => pool.pool === bestPool.id
+        );
+        if (!bestPoolMatch) {
+          console.warn("No matching pool found for AI response");
+          return;
+        }
 
-            setBestPool(bestPoolMatch);
-            setReason(data.reason);
-          })
-          .catch((error) => console.error(error));
+        setBestPool(bestPoolMatch);
+        setReason(bestPool.reason);
       } catch (error) {
         console.error("Fetch failed:", error);
         toast.error("Error fetching best pool");

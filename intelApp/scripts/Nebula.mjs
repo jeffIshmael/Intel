@@ -1,15 +1,16 @@
+"use server"
+
 import 'dotenv/config'; // Load environment variables from .env file
 
 const API_BASE_URL = "https://nebula-api.thirdweb.com";
 const SECRET_KEY = process.env.THIRDWEB_SECRET_KEY;
+
 
 if (!SECRET_KEY) {
   console.warn("⚠️ THIRDWEB_SECRET_KEY is missing. Some features may not work.");
 } else {
   console.log("Secret Key: Loaded successfully");
 }
-
-console.log("Secret Key: Loaded successfully");
 
 
 async function apiRequest(endpoint, method, body = {}) {
@@ -34,14 +35,14 @@ async function apiRequest(endpoint, method, body = {}) {
 // Rest of your functions remain unchanged...
 
 // Create a new Session
-async function createSession(title = "Smart Contract Explorer") {
+async function createSession(title = "Intel AI Nebula operations") {
   const response = await apiRequest("/session", "POST", { title });
   const sessionId = response.result.id;
 
   return sessionId; // Return the session ID
 }
 
-// Query the smart contract
+// Query nebula AI
 async function getBestPool(pools) {
   // Dynamically create the message for the query
   const formattedPools = pools
@@ -65,6 +66,52 @@ async function getBestPool(pools) {
 
   return response.message; // Return the structured response from Nebula
 }
+
+// Query smart contract
+// Query the smart contract
+async function queryContract(contractAddress, chainId, sessionId) {
+  // Dynamically create the message for the query
+  const message = `
+    Give me the deatils of this contract and provide a structured list of all functions available in the smart contract deployed at address ${contractAddress} on chain ${chainId}. The response must strictly follow this format:
+
+    ### Contract Details:
+    - **Name:** <contractName>
+    - **Address:** <contractAddress>
+    - **Chain ID:** <chainId>
+    - **Blockchain:** <blockchainName>
+
+    ### Read-only Functions:
+    1. **\`<functionName(parameters)\`**
+       - **Returns:** <returnType> (e.g., uint256, string, bool, etc.)
+       - **Description:** <brief description of what the function does>
+
+    ### Write-able Functions:
+    1. **\`<functionName(parameters)\`**
+       - **Returns:** <returnType> (if applicable)
+       - **Description:** <brief description of what the function does>
+       - **Payable:** <true/false> (if the function can accept Ether).
+       - **Parameters:** <parameterName> <parameterType> <parameterDescription>
+
+    If no functions exist in a category, include the section with "None available." Ensure the response is accurate, concise, and excludes unrelated details. If the contract implements interfaces (e.g., ERC20, ERC721), include their functions as well.
+  `.trim();
+
+  const requestBody = {
+    message,
+    session_id: sessionId,
+    context_filter: {
+      chain_ids: [chainId.toString()], // Chain ID must be a string
+      contract_addresses: [contractAddress],
+    },
+  };
+
+  console.log("Query Contract Request Body:", requestBody);
+
+  // Make the API request
+  const response = await apiRequest("/chat", "POST", requestBody);
+
+  return response.message; // Return the structured response from Nebula
+}
+
 
 // Handle user messages (follow-up questions)
 async function handleUserMessage(
@@ -117,9 +164,43 @@ async function deleteSession(sessionId) {
 
 // Function to execute transaction
 
+// async function executeCommand(
+//   message,
+//   signerWalletAddress,
+//   userId = "default-user",
+//   stream = false,
+//   chainId,
+//   contractAddress,
+//   sessionId
+// ) {
+//   const requestBody = {
+//     message,
+//     user_id: userId,
+//     stream,
+//     session_id: sessionId,
+//     execute_config: {
+//       mode: "client", // Only client mode is supported
+//       signer_wallet_address: signerWalletAddress,
+//     },
+//     context_filter: {
+//       chain_ids: [chainId.toString()], // Chain ID must be a string
+//       contract_addresses: [contractAddress],
+//     },
+//   };
+
+//   console.log("Execute Command Request Body:", requestBody);
+
+//   const response = await apiRequest("/execute", "POST", requestBody);
+
+//   console.log("Execute Command Response:", response);
+
+//   return response; // Return the full response including message and actions
+// }
+
+//function to use the nebula AI to stake to the best pool
 async function executeCommand(
   message,
-  signerWalletAddress,
+  signerWalletAddress, //0x4821ced48Fb4456055c86E42587f61c1F39c6315
   userId = "default-user",
   stream = false,
   chainId,
@@ -150,9 +231,11 @@ async function executeCommand(
   return response; // Return the full response including message and actions
 }
 
+
 export {
   createSession,
   getBestPool,
+  queryContract,
   handleUserMessage,
   updateSession,
   clearSession,

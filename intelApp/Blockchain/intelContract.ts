@@ -1,8 +1,19 @@
 export const intelContractAddress =
-  "0x859d2A4331ced760704122AcE2345bbad744f2B0";
+  "0xbF759c7F342eA07DfBCC8051179A38B4C066C180";
 export const intelAbi = [
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "address",
+        name: "_cUSD",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_aiAgent",
+        type: "address",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "constructor",
   },
@@ -27,6 +38,25 @@ export const intelAbi = [
     ],
     name: "OwnableUnauthorizedAccount",
     type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "Deposited",
+    type: "event",
   },
   {
     anonymous: false,
@@ -62,11 +92,24 @@ export const intelAbi = [
         name: "amount",
         type: "uint256",
       },
+    ],
+    name: "RewardsClaimed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "pool",
         type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
     name: "Staked",
@@ -87,27 +130,21 @@ export const intelAbi = [
         name: "amount",
         type: "uint256",
       },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "pool",
-        type: "address",
-      },
     ],
-    name: "Unstaked",
+    name: "Withdrawn",
     type: "event",
   },
   {
-    inputs: [
+    inputs: [],
+    name: "aiAgent",
+    outputs: [
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
-    name: "approveContract",
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -124,22 +161,23 @@ export const intelAbi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "claimRewards",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
-        internalType: "address",
-        name: "user",
-        type: "address",
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
-    name: "getUserPool",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
+    name: "deposit",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -165,19 +203,40 @@ export const intelAbi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
         internalType: "address",
-        name: "stakingPool",
+        name: "_stakingPool",
         type: "address",
       },
     ],
-    name: "stakeToBestPool",
+    name: "stakeInBestPool",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "stakingPool",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalStaked",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -196,38 +255,38 @@ export const intelAbi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "userStakes",
+    outputs: [
+      {
         internalType: "uint256",
         name: "amount",
         type: "uint256",
       },
       {
-        internalType: "address",
-        name: "newPool",
-        type: "address",
+        internalType: "uint256",
+        name: "rewards",
+        type: "uint256",
       },
     ],
-    name: "unstakeAndRestake",
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
   {
     inputs: [
       {
-        internalType: "address",
-        name: "",
-        type: "address",
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
-    name: "userStakedPool",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
+    name: "withdraw",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
 ];

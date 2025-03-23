@@ -26,7 +26,8 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
     "sonner": "^1.7.4",
-    "thirdweb": "^5.88.2"
+    "thirdweb": "^5.88.2",
+    "viem": "^2.23.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 prisma.$connect().catch((error) => {
-  console.error("Prisma connection failed:", error);
+  console.log("Prisma connection failed:", error);
 });
 
 const handler = NextAuth({

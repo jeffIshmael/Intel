@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import QRCode from "./QRCode";
 import { updateAIBalance } from "@/lib/functions";
+import {stakecUSD} from "@/lib/allfunctions"
 
 export default function TransferModal({
   balance,
@@ -13,6 +14,7 @@ export default function TransferModal({
   userId,
   poolSpec,
   poolName,
+  privKey,
   stake,
 }: {
   balance: number;
@@ -21,6 +23,7 @@ export default function TransferModal({
   userId: string;
   poolSpec: string;
   poolName: string;
+  privKey:string;
   stake: (amount: number, poolSpec: string, poolName: string) => Promise<void>;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -111,6 +114,18 @@ export default function TransferModal({
       setLoading(false);
     }
   };
+
+  //new staking function
+  const handleContractStaking = async () =>{
+    try {
+      const result = await stakecUSD(privKey as `0x${string}`, Number(amount) * 10**18 );
+      console.log(result);
+      
+    } catch (error) {
+      console.log(error);
+    }
+
+  }
 
   
 
