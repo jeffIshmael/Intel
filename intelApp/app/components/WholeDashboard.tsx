@@ -162,43 +162,42 @@ const WholeDashboard = () => {
 
   //fetching best pool according to AI
   useEffect(() => {
-    const getBestPool = async () => {
+    if (!stablecoinPools) {
+      console.log("No pools available");
+      return;
+    }
+    const getPool = async () => {
       try {
         setFetchingPool(true);
-        const response = await fetch("/api/pools", {
+        await fetch("/api/bestpool", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            stablecoinPools,
-          }),
-        });
-        if (!response.ok) {
-          const errorText = await response.text(); // Get error message
-          console.error("API Error:", errorText);
-          toast.error("Failed to fetch best pool");
-        }
-        const data = await response.json();
-        console.log(data);
-        if (data && stablecoinPools) {
-          const intelAIsBest = stablecoinPools.filter(
-            (pool: Pool) => pool.pool === data.bestPool.id
-          );
-          console.log(intelAIsBest[0]);
-          setBestPool(intelAIsBest[0]);
-          setBestAIStakingPool(intelAIsBest[0]);
-          setReason(data.bestPool.reason);
-          setFetchingPool(false);
-        }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ stablecoinPools: stablecoinPools }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+            const bestPoolMatch = stablecoinPools.find(
+              (pool) => pool.pool === data.id
+            );
+            if (!bestPoolMatch) {
+              console.warn("No matching pool found for AI response");
+              return;
+            }
+
+            setBestPool(bestPoolMatch);
+            setBestAIStakingPool(bestPoolMatch);
+            setReason(data.reason);
+          })
+          .catch((error) => console.error(error));
       } catch (error) {
-        setFetchingPool(false);
-        console.log(error);
+        console.error("Fetch failed:", error);
+        toast.error("Error fetching best pool");
       } finally {
         setFetchingPool(false);
       }
     };
-    getBestPool();
+    getPool();
   }, [stablecoinPools]);
 
   //function to approve cUSD sending to a pool
@@ -692,6 +691,7 @@ const WholeDashboard = () => {
             userId={(user?.id ?? "defaultId").toString()}
             poolSpec={bestAIStakingPool?.pool ?? ""}
             poolName={bestAIStakingPool?.project ?? ""}
+            privKey={user?.privateKey ?? ""}
             stake={handleAIStaking}
           />
           {/* staked pool section */}

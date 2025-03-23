@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { getBestPool } from "@/scripts/Nebula.mjs";
 
 // Handle POST requests
