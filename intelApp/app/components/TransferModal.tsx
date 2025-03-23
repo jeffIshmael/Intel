@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import QRCode from "./QRCode";
 import { updateAIBalance } from "@/lib/functions";
-import {stakecUSD} from "@/lib/allfunctions"
+// import {stakecUSD} from "@/lib/allfunctions"
 
 export default function TransferModal({
   balance,
@@ -101,9 +101,9 @@ export default function TransferModal({
         console.log(result);
         if (result) {
           toast.success(`Withdrawing ${amount} cUSD from AI Wallet`);
+          console.log(privKey);
         }
       }
-
       // Closing modal after transfer
       setIsModalOpen(false);
       setLoading(false);
@@ -116,16 +116,16 @@ export default function TransferModal({
   };
 
   //new staking function
-  const handleContractStaking = async () =>{
-    try {
-      const result = await stakecUSD(privKey as `0x${string}`, Number(amount) * 10**18 );
-      console.log(result);
+  // const handleContractStaking = async () =>{
+  //   try {
+  //     const result = await stakecUSD(privKey as `0x${string}`, Number(amount) * 10**18 );
+  //     console.log(result);
       
-    } catch (error) {
-      console.log(error);
-    }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
 
-  }
+  // }
 
   
 

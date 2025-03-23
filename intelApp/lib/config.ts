@@ -1,5 +1,5 @@
-import { createWalletClient, custom, http, createPublicClient } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
+import { createWalletClient, http, createPublicClient } from 'viem'
+// import { privateKeyToAccount } from 'viem/accounts'
 import { celoAlfajores } from 'viem/chains'
  
 export const publicClient = createPublicClient({
