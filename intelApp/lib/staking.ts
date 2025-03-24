@@ -79,7 +79,7 @@ const stakeCUSD = async (amount: number) => {
   return txFull;
 };
 
-const handleStake = async (amount: number) => {
+export const handleStake = async (amount: number) => {
   try {
     await approveCUSD(amount);
     const result = await stakeCUSD(amount);

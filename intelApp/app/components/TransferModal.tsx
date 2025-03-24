@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import QRCode from "./QRCode";
 import { sendEmailToAllStakedUsers, updateStakedPool } from "@/lib/functions";
 import { sendcUSD } from "@/lib/allfunctions";
-import { intelContractAddress, intelAbi } from "@/Blockchain/intelContract";
+import { intelContractAddress } from "@/Blockchain/intelContract";
 import { getStake } from "@/lib/TokenTransfer";
 
 export default function TransferModal({
