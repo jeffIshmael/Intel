@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 
 const provider = new ethers.JsonRpcProvider("https://forno.celo.org"); // Celo RPC URL
-const privateKey = "YOUR_PRIVATE_KEY"; // Replace with your actual private key
+const privateKey = "YOUR_PRIVATE_KEY"; // use actual private key
 const signer = new ethers.Wallet(privateKey, provider);
 
 const approveCUSD = async (amount: number) => {
@@ -89,5 +89,4 @@ const handleStake = async (amount: number) => {
   }
 };
 
-// Usage Example
-handleStake(10); // Stake 10 cUSD
+
