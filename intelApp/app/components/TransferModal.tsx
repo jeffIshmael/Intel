@@ -146,6 +146,7 @@ export default function TransferModal({
           poolSpec,
           BigInt(Number(amount) * 10 ** 18)
         );
+        console.log(updatePool);
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
