@@ -191,6 +191,7 @@ const WholeDashboard = () => {
         setBestPool(bestPoolMatch);
         setReason(bestPool.reason);
       } catch (error) {
+        console.log(error);
         // **Manual fallback logic: Select best pool manually**
         const fallbackPool = getFallbackPool(stablecoinPools);
         console.log("Selected fallback pool:", fallbackPool);
