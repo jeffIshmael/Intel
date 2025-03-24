@@ -23,6 +23,7 @@ import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
 import Link from "next/link";
 import { getBestPool } from "@/scripts/Nebula.mjs";
+import { getFallbackPool } from "@/lib/helperFunctions";
 
 const contract = getContract({
   client,
@@ -138,7 +139,6 @@ const WholeDashboard = () => {
           // Update pools and best pools
           setStablecoinPools(data.cUSDStableCoins);
           // setBestPool(data.bestCUSDPool);
-          
 
           // Find the current pool based on `stakedPool`
           const currentPoolFromData = data.cUSDStableCoins.find(
@@ -167,6 +167,10 @@ const WholeDashboard = () => {
       console.log("No pools available");
       return;
     }
+    const poolToStake = stablecoinPools.filter(
+      (pool) => pool.project.toLowerCase() !== "uniswap-v3"
+    );
+    setBestAIStakingPool(poolToStake[0]);
     const getPool = async () => {
       try {
         setFetchingPool(true);
@@ -184,14 +188,17 @@ const WholeDashboard = () => {
           console.warn("No matching pool found for AI response");
           return;
         }
-       const poolToStake = stablecoinPools.filter((pool)=> (pool.project).toLowerCase() !== "uniswap-v3");
-       console.log(poolToStake);
         setBestPool(bestPoolMatch);
-        setBestAIStakingPool(poolToStake[0]);
         setReason(bestPool.reason);
       } catch (error) {
-        console.error("Fetch failed:", error);
-        toast.error("Error fetching best pool");
+        // **Manual fallback logic: Select best pool manually**
+        const fallbackPool = getFallbackPool(stablecoinPools);
+        console.log("Selected fallback pool:", fallbackPool);
+
+        if (fallbackPool) {
+          setBestPool(fallbackPool as Pool | null);
+          setReason("Selected manually as best available pool");
+        }
       } finally {
         setFetchingPool(false);
       }
@@ -692,7 +699,6 @@ const WholeDashboard = () => {
             poolSpec={bestAIStakingPool?.pool ?? ""}
             poolName={bestAIStakingPool?.project ?? ""}
             privKey={user?.privateKey ?? ""}
-           
             stake={handleAIStaking}
           />
           {/* staked pool section */}
@@ -736,7 +742,7 @@ const WholeDashboard = () => {
       <div className="bg-gray-800 mt-6 text-white p-6 rounded-lg shadow-xl w-full max-w-md mx-auto">
         {/* Title Section */}
         <h1 className="text-2xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-500 mb-6">
-        ✅ Best Staking Pool
+          ✅ Best Staking Pool
         </h1>
 
         {stablecoinPools ? (
@@ -756,7 +762,7 @@ const WholeDashboard = () => {
               {/* APY Information */}
               <div className="space-x-2 flex flex-col-2 ">
                 <p className="text-lg text-gray-400 text-center">
-                  Annual Percentage Yield (APY): 
+                  Annual Percentage Yield (APY):
                 </p>
                 <p className="text-lg font-bold text-center text-green-500">
                   {bestPool?.apyBase}%
@@ -770,15 +776,13 @@ const WholeDashboard = () => {
 
               {/* TVL and AI Reason */}
               <div className="flex flex-col items-center space-y-4">
-              <div className="space-x-2 flex flex-col-2 ">
-                <p className="text-xl font-semibold text-center">
-                    TVL:
-                  </p>
+                <div className="space-x-2 flex flex-col-2 ">
+                  <p className="text-xl font-semibold text-center">TVL:</p>
                   {/* Total Value Locked (TVL) */}
                   <p className="text-xl font-semibold text-center">
                     ${bestPool?.tvlUsd?.toLocaleString()}
                   </p>
-              </div>
+                </div>
 
                 {/* AI Reason */}
                 <div className="text-center">
@@ -941,7 +945,6 @@ const WholeDashboard = () => {
           showingText={buttonText}
         />
       )}
-
     </div>
   );
 };

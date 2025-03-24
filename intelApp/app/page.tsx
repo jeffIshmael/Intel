@@ -137,15 +137,13 @@ export default function Home() {
   
         if (!bestPoolMatch) {
           console.warn("No matching pool found for AI response");
-          throw new Error("Fallback required");
+          console.log("Fallback required");
         }
   
-        setBestPool(bestPoolMatch);
+        setBestPool(bestPoolMatch as Pool | null);
         setReason(bestPool.reason);
       } catch (error) {
-        console.error("Fetch failed, using manual fallback:", error);
-        toast.error("Error fetching best pool, using fallback");
-  
+          
         // **Manual fallback logic: Select best pool manually**
         const fallbackPool = getFallbackPool(stablecoinPools);
         console.log("Selected fallback pool:", fallbackPool);
