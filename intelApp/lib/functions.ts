@@ -2,7 +2,7 @@
 
 //This file contains all the functions that involve use of ORM i.e Prisma
 import prisma from "./db";
-import  {sendEmail}  from "./EmailService"; 
+import  {sendEmail}  from "../app/actions/EmailService"; 
 
 //function to get a user's details
 export async function getUser(userId: number) {
