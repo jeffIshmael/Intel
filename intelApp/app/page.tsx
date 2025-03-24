@@ -17,6 +17,7 @@ import SignUp from "./components/SignUp";
 import QRCodeModal from "./components/QRCode";
 import StakeModal from "./components/StakeModal";
 import { getBestPool } from "@/scripts/Nebula.mjs";
+import {getFallbackPool} from "../lib/helperFunctions";
 
 const contract = getContract({
   client,
@@ -109,40 +110,58 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!stablecoinPools) {
+    if (!stablecoinPools || stablecoinPools.length === 0) {
       console.log("No pools available");
       return;
     }
+  
     const getPool = async () => {
       try {
         setFetchingPool(true);
         const result = await getBestPool(stablecoinPools);
         const match = result.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+  
+        if (!match) {
+          throw new Error("Invalid AI response format");
+        }
+  
         const bestPool = {
           name: match[1].trim(),
           id: match[2].trim(),
           reason: match[3].trim(),
         };
+  
         const bestPoolMatch = stablecoinPools.find(
           (pool) => pool.pool === bestPool.id
         );
+  
         if (!bestPoolMatch) {
           console.warn("No matching pool found for AI response");
-          return;
+          throw new Error("Fallback required");
         }
-
+  
         setBestPool(bestPoolMatch);
         setReason(bestPool.reason);
       } catch (error) {
-        console.error("Fetch failed:", error);
-        toast.error("Error fetching best pool");
+        console.error("Fetch failed, using manual fallback:", error);
+        toast.error("Error fetching best pool, using fallback");
+  
+        // **Manual fallback logic: Select best pool manually**
+        const fallbackPool = getFallbackPool(stablecoinPools);
+        console.log("Selected fallback pool:", fallbackPool);
+  
+        if (fallbackPool) {
+          setBestPool(fallbackPool as Pool | null);
+          setReason("Selected manually as best available pool");
+        }
       } finally {
         setFetchingPool(false);
       }
     };
-
+  
     getPool();
   }, [stablecoinPools]);
+  
 
   useEffect(() => {
     console.log(balance);

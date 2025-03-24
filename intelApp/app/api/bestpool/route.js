@@ -45,7 +45,7 @@ export async function POST(request) {
   }
 }
 
-// Handle GET requests (optional)
+// Handle GET requests
 export async function GET() {
   return new Response(JSON.stringify({ message: "Use POST to fetch the best pool" }), {
     status: 405,

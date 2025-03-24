@@ -67,7 +67,9 @@ async function getBestPool(pools) {
   return response.message; // Return the structured response from Nebula
 }
 
-// Query smart contract
+
+
+
 // Query the smart contract
 async function queryContract(contractAddress, chainId, sessionId) {
   // Dynamically create the message for the query
@@ -162,40 +164,6 @@ async function deleteSession(sessionId) {
   return response; // Returns a confirmation
 }
 
-// Function to execute transaction
-
-// async function executeCommand(
-//   message,
-//   signerWalletAddress,
-//   userId = "default-user",
-//   stream = false,
-//   chainId,
-//   contractAddress,
-//   sessionId
-// ) {
-//   const requestBody = {
-//     message,
-//     user_id: userId,
-//     stream,
-//     session_id: sessionId,
-//     execute_config: {
-//       mode: "client", // Only client mode is supported
-//       signer_wallet_address: signerWalletAddress,
-//     },
-//     context_filter: {
-//       chain_ids: [chainId.toString()], // Chain ID must be a string
-//       contract_addresses: [contractAddress],
-//     },
-//   };
-
-//   console.log("Execute Command Request Body:", requestBody);
-
-//   const response = await apiRequest("/execute", "POST", requestBody);
-
-//   console.log("Execute Command Response:", response);
-
-//   return response; // Return the full response including message and actions
-// }
 
 //function to use the nebula AI to stake to the best pool
 async function executeCommand(
