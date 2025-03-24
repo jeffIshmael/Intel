@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
 import Link from "next/link";
+import { getBestPool } from "@/scripts/Nebula.mjs";
 
 const contract = getContract({
   client,
@@ -169,27 +170,25 @@ const WholeDashboard = () => {
     const getPool = async () => {
       try {
         setFetchingPool(true);
-        await fetch("/api/bestpool", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ stablecoinPools: stablecoinPools }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data);
-            const bestPoolMatch = stablecoinPools.find(
-              (pool) => pool.pool === data.id
-            );
-            if (!bestPoolMatch) {
-              console.warn("No matching pool found for AI response");
-              return;
-            }
-
-            setBestPool(bestPoolMatch);
-            setBestAIStakingPool(bestPoolMatch);
-            setReason(data.reason);
-          })
-          .catch((error) => console.error(error));
+        const result = await getBestPool(stablecoinPools);
+        const match = result.match(/^(.+?) \[(.+?)\]\n(.+)$/);
+        const bestPool = {
+          name: match[1].trim(),
+          id: match[2].trim(),
+          reason: match[3].trim(),
+        };
+        const bestPoolMatch = stablecoinPools.find(
+          (pool) => pool.pool === bestPool.id
+        );
+        if (!bestPoolMatch) {
+          console.warn("No matching pool found for AI response");
+          return;
+        }
+       const poolToStake = stablecoinPools.filter((pool)=> (pool.project).toLowerCase() !== "uniswap-v3");
+       console.log(poolToStake);
+        setBestPool(bestPoolMatch);
+        setBestAIStakingPool(poolToStake[0]);
+        setReason(bestPool.reason);
       } catch (error) {
         console.error("Fetch failed:", error);
         toast.error("Error fetching best pool");
@@ -197,6 +196,7 @@ const WholeDashboard = () => {
         setFetchingPool(false);
       }
     };
+
     getPool();
   }, [stablecoinPools]);
 
@@ -692,6 +692,7 @@ const WholeDashboard = () => {
             poolSpec={bestAIStakingPool?.pool ?? ""}
             poolName={bestAIStakingPool?.project ?? ""}
             privKey={user?.privateKey ?? ""}
+           
             stake={handleAIStaking}
           />
           {/* staked pool section */}
@@ -754,10 +755,10 @@ const WholeDashboard = () => {
 
               {/* APY Information */}
               <div className="space-x-2 flex flex-col-2 ">
-                <p className="text-3xl text-gray-400 text-center">
+                <p className="text-lg text-gray-400 text-center">
                   Annual Percentage Yield (APY): 
                 </p>
-                <p className="text-3xl font-bold text-center text-green-500">
+                <p className="text-lg font-bold text-center text-green-500">
                   {bestPool?.apyBase}%
                 </p>
               </div>
@@ -940,6 +941,7 @@ const WholeDashboard = () => {
           showingText={buttonText}
         />
       )}
+
     </div>
   );
 };

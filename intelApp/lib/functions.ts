@@ -2,6 +2,7 @@
 
 //This file contains all the functions that involve use of ORM i.e Prisma
 import prisma from "./db";
+import  {sendEmail}  from "./EmailService"; 
 
 //function to get a user's details
 export async function getUser(userId: number) {
@@ -243,3 +244,62 @@ export async function updateUnstaking(userId:number){
     console.log(error);
   }
 }
+
+//function to send email to all staked users
+export async function sendEmailToAllStakedUsers() {
+  try {
+    const stakedUsers = await prisma.user.findMany({
+      where: { staked: true },
+      select: { email: true },
+    });
+     // Loop through each staked user and send an email
+     for (const user of stakedUsers) {
+      const email = user.email;
+      const subject = "Intel AI Has Successfully Staked to Moola Market!";
+
+      const text = `Dear Valued User,
+      
+      We are excited to inform you that Intel AI has successfully staked to Moola Market. 
+      Your trust and participation in our platform are truly appreciated.
+      
+      By staking, you contribute to a secure and thriving ecosystem while gaining exclusive 
+      benefits within the Moola Market staking Pool.
+      
+      Thank you for being a part of this journey with us.
+      
+      Best regards,  
+      Intel AI Team`;
+      
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #2c3e50;">Intel AI Has Successfully Staked to Moola Market!</h2>
+          <p style="font-size: 16px; color: #555;">
+            Dear Valued User,  
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            We are excited to inform you that <b>Intel AI</b> has successfully staked to <b>Moola Market</b>. 
+            Your trust and participation in our platform are truly appreciated.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            By staking, you contribute to a <b>secure</b> and <b>thriving ecosystem</b> while gaining exclusive 
+            benefits within the Moola Market community.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Thank you for being a part of this journey with us.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Best regards,  
+            <br>
+            <strong>Intel AI Team</strong>
+          </p>
+        </div>
+      `;
+      
+      await sendEmail(email, subject, text, html);
+      console.log(`Email sent to ${email}`);
+    }
+
+    console.log("Emails sent to all staked users.");
+  }catch(error){
+    console.log(error);
+  }}
