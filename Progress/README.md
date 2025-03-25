@@ -37,7 +37,6 @@ This folder tracks the development progress of the Intel App, detailing goals, c
 
 - ✅ Developed an AI agent for automated staking pool selection and execution.
 
-- 🚧 **In progress:** Implementing AI-driven unstaking and reallocation of funds between pools.
 
 ---
 
@@ -59,6 +58,20 @@ This folder tracks the development progress of the Intel App, detailing goals, c
 
 - Real time notifications to the user's emails.
 
+- Implement AI-driven unstaking and reallocation of funds between pools.
+
 - Begin the alpha stage for early adopters and real-world testing.
 
+### Achievements
 
+- ✅ Successfully developed and deployed a smart contract to efficiently manage staking in liquidity pools.
+
+- ✅ Conducted comprehensive testing and security audits to ensure the smart contract is secure.
+
+- ✅ Successfully deployed Intel smart contract on Celo mainnet.
+
+- ✅ Account abstraction - Used Viem library to ensure users pay gas fees in cUSD.
+
+- ✅ Users can now receive real time notification through their emails.
+
+- 🚧 **In progress:** Integrating AI agent with the smart contract for seamless automated staking  
