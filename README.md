@@ -67,6 +67,30 @@ The primary objectives of Intel are:
 
 5. **Withdrawals** – When a user requests a withdrawal, the AI unstakes, routes funds back to the contract, and sends them to the user.
 
+## Architecture visualization
+
+%%{init: {'theme': 'forest', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
+flowchart TD
+    A[DeFiLlama API] -->|1. Fetch Pool Data| B[Intel Backend]
+    B -->|2. Analyze Metrics| C[Nebula AI Engine]
+    C -->|3. Select Optimal Pool| D[Smart Contract]
+    E[User Wallet] -->|4. Deposit cUSD| D
+    D -->|5. Stake Funds| F[Best Liquidity Pool]
+    F -->|6. Accumulate Yield| D
+    D -->|7. Withdraw Funds| E
+    
+    subgraph Intel System
+        B
+        C
+        D
+    end
+    
+    style A fill:#6b46c1,color:white
+    style E fill:#3182ce,color:white
+    style F fill:#38a169,color:white
+    style Intel System fill:#1a202c,color:white,stroke:#4a5568
+
+
 ## ✅ Successfully implemented Features
 
 **=>** DeFiLlama API Integration – Fetches live liquidity pool data.
@@ -90,7 +114,7 @@ The primary objectives of Intel are:
 
 ## Demo
 1. To create your Intel account, visit our live website: [https://intel-mocha.vercel.app/](https://intel-mocha.vercel.app).
-2. Watch our video demo here: [Video Link](https://www.loom.com/share/aadaaf0a38424c4cb9dea7912257fa29?sid=3221ad2b-e1de-4f06-9633-58714866d7f1).
+2. Watch our video demo here: [Video Link](https://www.loom.com/share/6deb4d5e09334255a1e5d154655fe437?sid=5685e50a-627d-4667-86a5-d4b8a57ebede).
 
 ---
 
