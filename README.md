@@ -67,29 +67,6 @@ The primary objectives of Intel are:
 
 5. **Withdrawals** – When a user requests a withdrawal, the AI unstakes, routes funds back to the contract, and sends them to the user.
 
-## Architecture visualization
-
-%%{init: {'theme': 'forest', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
-flowchart TD
-    A[DeFiLlama API] -->|1. Fetch Pool Data| B[Intel Backend]
-    B -->|2. Analyze Metrics| C[Nebula AI Engine]
-    C -->|3. Select Optimal Pool| D[Smart Contract]
-    E[User Wallet] -->|4. Deposit cUSD| D
-    D -->|5. Stake Funds| F[Best Liquidity Pool]
-    F -->|6. Accumulate Yield| D
-    D -->|7. Withdraw Funds| E
-    
-    subgraph Intel System
-        B
-        C
-        D
-    end
-    
-    style A fill:#6b46c1,color:white
-    style E fill:#3182ce,color:white
-    style F fill:#38a169,color:white
-    style Intel System fill:#1a202c,color:white,stroke:#4a5568
-
 
 ## ✅ Successfully implemented Features
 
