@@ -70,11 +70,11 @@ The primary objectives of Intel are:
 
 ## ✅ Successfully implemented Features
 
-**=>** DeFiLlama API Integration – Fetches live liquidity pool data.
-**=>** AI driven optimization - Using Nebula AI to determine the best pool.
-**=>** Smart Contract deployment – Manages the staking to staking pools.
-**=>** Real-Time Email Notifications – Keeps users updated on staking activities.
-**=>** User-Friendly Dashboard – Allows users to see their portfolio.
+1. **DeFiLlama API Integration** – Fetches live liquidity pool data.
+2. **AI driven optimization** - Using Nebula AI to determine the best pool.
+3. **Smart Contract deployment** – Manages the staking to staking pools.
+4. **Real-Time Email Notifications** – Keeps users updated on staking activities.
+5. **User-Friendly Dashboard** – Allows users to see their portfolio.
 
 ## 🚧 Features under implementation
 
@@ -135,4 +135,4 @@ Before running the project locally, ensure you have the following installed:
 ## Contact
 For any questions or feedback, feel free to reach out to us:
 
-Email: [inteldevs@gmail.com](jeffianmuchiri24@gmail.com).
+Email: [inteldevs@gmail.com](intelai24@gmail.com).

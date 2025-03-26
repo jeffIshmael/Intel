@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import QRCode from "./QRCode";
 import { sendEmailToAllStakedUsers, updateStakedPool } from "@/lib/functions";
-import { sendcUSD } from "@/lib/allfunctions";
+import { sendcUSD, stakecUSD } from "@/lib/allfunctions";
 import { intelContractAddress } from "@/Blockchain/intelContract";
 import { getStake } from "@/lib/TokenTransfer";
 
@@ -134,6 +134,7 @@ export default function TransferModal({
           transferType === "toAI" ? "to" : "from"
         } AI Wallet`
       );
+      //sending cUSD to thr contract
       const result = await sendcUSD(
         privKey as `0x${string}`,
         intelContractAddress as `0x${string}`,
@@ -141,72 +142,82 @@ export default function TransferModal({
       );
       console.log("Sending cUSD tx:", result);
       if (result) {
-        const updatePool = await updateStakedPool(
-          Number(userId),
-          poolSpec,
-          BigInt(Number(amount) * 10 ** 18)
+        //calling smartcontract deposit function
+        const hash = await stakecUSD(
+          privKey as `0x${string}`,
+          Number(amount) * 10 ** 18
         );
-        console.log(updatePool);
-        toast.success(
-          <div className="flex items-center space-x-4">
-            {/* Icon for visual appeal */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-green-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+        if (hash) {
+          //update the prisma backend
+          const updatePool = await updateStakedPool(
+            Number(userId),
+            poolSpec,
+            BigInt(Number(amount) * 10 ** 18)
+          );
+          console.log(updatePool);
+          toast.success(
+            <div className="flex items-center space-x-4">
+              {/* Icon for visual appeal */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-green-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
 
-            {/* Main Content */}
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                <span className="font-mono">
-                  Successfully sent to AI wallet.
-                  <span>(Intel contract Address)</span>.
-                </span>
-              </p>
-              <p className="text-sm text-gray-600">
-                <a
-                  href={`https://celoscan.io/tx/${result}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                >
-                  Explore on CeloScan
-                </a>
-              </p>
-            </div>
-          </div>,
-          {
-            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
-            style: {
-              borderLeft: "4px solid #34C759", // Green border for success
-            },
-            duration: 5000,
-          }
-        );
-        // trigger the nebula AI to stake to the best pool
-        // const transaction = await stakecUSD(
-        //   privKey as `0x${string}`,
-        //   Number(amount) * 10 ** 18
-        // );
-        // console.log("Deposit tx:", transaction);
-        // const outcome = await sendToStakingPool(
-        //   privKey as `0x${string}`,
-        //   "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
-        // );
-        // console.log("Send to staking pool tx:", outcome);
-        const emails = await sendEmailToAllStakedUsers();
-        toast("An update will be sent to your email.");
-        console.log(emails);
+              {/* Main Content */}
+              <div>
+                <p className="text-sm font-medium text-gray-800">
+                  <span className="font-mono">
+                    Successfully sent to AI wallet.
+                    <span>(Intel contract Address)</span>.
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  <a
+                    href={`https://celoscan.io/tx/${result}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline hover:text-blue-600 transition-colors"
+                  >
+                    Explore on CeloScan
+                  </a>
+                </p>
+              </div>
+            </div>,
+            {
+              className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
+              style: {
+                borderLeft: "4px solid #34C759", // Green border for success
+              },
+              duration: 5000,
+            }
+          );
+          // trigger the nebula AI to stake to the best pool
+          // const transaction = await stakecUSD(
+          //   privKey as `0x${string}`,
+          //   Number(amount) * 10 ** 18
+          // );
+          // console.log("Deposit tx:", transaction);
+          // const outcome = await sendToStakingPool(
+          //   privKey as `0x${string}`,
+          //   "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
+          // );
+          // console.log("Send to staking pool tx:", outcome);
+          const emails = await sendEmailToAllStakedUsers();
+          toast("An update will be sent to your email.");
+          console.log(emails);
+        } else {
+          toast.error("Something bad happened.");
+        }
       }
     } catch (error) {
       console.log(error);
