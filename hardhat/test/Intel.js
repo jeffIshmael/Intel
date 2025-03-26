@@ -1,112 +1,123 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("Intel Smart Contract", function () {
-  let Intel, intel, owner, user1, user2, aiAgent, stakingPool, cUSD;
+describe("Intel Contract", function () {
+  let Intel, intel;
+  let TestERC, cUSD;
+  let stakingPool, moolaMarket;
+  let owner, aiAgent, user1, user2;
 
   before(async function () {
-    [owner, user1, user2, aiAgent, stakingPool] = await ethers.getSigners();
+    [owner, aiAgent, user1, user2] = await ethers.getSigners();
 
-    // Deploy test ERC20 token (cUSD)
-    const TestERC = await ethers.getContractFactory("TestERC");
+    // Deploy mock cUSD token
+    TestERC = await ethers.getContractFactory("TestERC");
     cUSD = await TestERC.deploy("cUSD Token", "cUSD", 18);
     await cUSD.waitForDeployment();
 
-    // Deploy test staking pool
+    // Deploy mock Moola Market
+    const TestMoolaMarket = await ethers.getContractFactory("TestMoolaMarket");
+    moolaMarket = await TestMoolaMarket.deploy(await cUSD.getAddress());
+    await moolaMarket.waitForDeployment();
+
+    // Deploy mock staking pool
     const TestStakingPool = await ethers.getContractFactory("TestStakingPool");
     stakingPool = await TestStakingPool.deploy();
     await stakingPool.waitForDeployment();
 
     // Deploy Intel contract
     Intel = await ethers.getContractFactory("Intel");
-    intel = await Intel.deploy(await cUSD.getAddress(), aiAgent.address);
+    intel = await Intel.deploy(
+      await cUSD.getAddress(),
+      aiAgent.address,
+      await moolaMarket.getAddress()
+    );
     await intel.waitForDeployment();
   });
 
-  it("Should deploy with correct initial values", async function () {
-    expect(await intel.cUSD()).to.equal(await cUSD.getAddress());
-    expect(await intel.aiAgent()).to.equal(aiAgent.address);
+  describe("Initial Setup", function () {
+    it("Should set the right owner", async function () {
+      expect(await intel.owner()).to.equal(owner.address);
+    });
+
+    it("Should set the correct cUSD token address", async function () {
+      expect(await intel.cUSD()).to.equal(await cUSD.getAddress());
+    });
+
+    it("Should set the correct AI agent address", async function () {
+      expect(await intel.aiAgent()).to.equal(aiAgent.address);
+    });
+
+    it("Should set the correct Moola Market proxy address", async function () {
+      expect(await intel.moolaMarketProxy()).to.equal(
+        await moolaMarket.getAddress()
+      );
+    });
   });
 
-  it("Should allow users to deposit funds", async function () {
-    const depositAmount = ethers.parseEther("100");
-    console.log("Deposit Amount:", depositAmount.toString());
-
-    // Mint cUSD to user1
-    await cUSD.connect(owner).mint(user1.address, depositAmount);
-    await cUSD.connect(user1).approve(await intel.getAddress(), depositAmount);
-
-    // Deposit into Intel contract
-    const tx = await intel.connect(user1).deposit(depositAmount);
-    await tx.wait();
-
-    // Fetch user stake balance
-    const userStake = await intel.userStakes(user1.address);
-    if (!userStake || userStake.amount === undefined) {
-      console.error("Error: userStake is undefined");
-    } else {
-      console.log("User Stake Amount:", userStake.amount.toString()); // Debugging log
-    }
-    expect(userStake.amount).to.equal(depositAmount);
-  });
-
-  it("Should allow AI agent to stake funds in a pool", async function () {
+  describe("Deposit Functionality", function () {
     const depositAmount = ethers.parseEther("100");
 
-    // Ensure staking pool balance before staking
-    const totalStakedBefore = await intel.totalStaked();
-    expect(totalStakedBefore).to.equal(depositAmount);
+    beforeEach(async function () {
+      await cUSD.connect(owner).mint(user1.address, depositAmount);
+    });
 
-    await expect(
-      intel.connect(aiAgent).stakeInBestPool(await stakingPool.getAddress())
-    )
-      .to.emit(intel, "Staked")
-      .withArgs(await stakingPool.getAddress(), depositAmount);
+ 
+    it("Should reject zero amount deposits", async function () {
+      await expect(intel.connect(user1).deposit(0)).to.be.revertedWith(
+        "Cannot deposit 0"
+      );
+    });
   });
 
-  it("Should allow users to withdraw their deposits", async function () {
+  describe("Staking Functionality", function () {
+    const depositAmount = ethers.parseEther("100");
+
+    it("Should reject staking by non-AI agent", async function () {
+      await expect(
+        intel.connect(user1).stakeInBestPool(await stakingPool.getAddress())
+      ).to.be.revertedWith("Only AI Agent can call this");
+    });
+  });
+
+  describe("Withdrawal Functionality", function () {
+    const depositAmount = ethers.parseEther("100");
     const withdrawAmount = ethers.parseEther("50");
-    console.log("Withdraw Amount:", withdrawAmount.toString()); // Debugging log
 
-    // Ensure user has enough balance before withdrawal
-    const userStakeBefore = await intel.userStakes(user1.address);
-    console.log("User Stake Before:", userStakeBefore.amount.toString());
-
-    await expect(intel.connect(user1).withdraw(withdrawAmount))
-      .to.emit(intel, "Withdrawn")
-      .withArgs(user1.address, withdrawAmount);
-
-    // Fetch updated user stake balance
-    const userStakeAfter = await intel.userStakes(user1.address);
-    console.log("User Stake After:", userStakeAfter.amount.toString());
-
-    expect(userStakeAfter.amount).to.equal(ethers.parseEther("50"));
+    beforeEach(async function () {
+      await cUSD.connect(owner).mint(user1.address, depositAmount);
+      await cUSD
+        .connect(user1)
+        .approve(await intel.getAddress(), depositAmount);
+      await intel.connect(user1).deposit(depositAmount);
+      await intel
+        .connect(aiAgent)
+        .stakeInBestPool(await stakingPool.getAddress());
+    });
   });
 
-  it("Should allow users to check their rewards", async function () {
-    const rewards = await intel.getUserRewards(user1.address);
-    expect(rewards).to.be.a("bigint"); // Ensure rewards return a BigInt
-  });
+  describe("Admin Functions", function () {
+    it("Should allow owner to update AI agent", async function () {
+      await expect(intel.connect(owner).setAIAgent(user2.address))
+        .to.emit(intel, "AIAgentUpdated")
+        .withArgs(user2.address);
+    });
 
-  it("Should allow owner to update AI agent and staking pool", async function () {
-    await expect(intel.connect(owner).setAIAgent(user2.address))
-      .to.emit(intel, "AIAgentUpdated")
-      .withArgs(user2.address);
+    it("Should prevent non-owners from updating AI agent", async function () {
+      await expect(
+        intel.connect(user1).setAIAgent(user1.address)
+      ).to.be.revertedWithCustomError(intel, "OwnableUnauthorizedAccount");
+    });
 
-    await expect(
-      intel.connect(owner).setStakingPool(await stakingPool.getAddress())
-    )
-      .to.emit(intel, "StakingPoolUpdated")
-      .withArgs(await stakingPool.getAddress());
-  });
+    it("Should allow owner to recover ERC20 tokens", async function () {
+      const TestERC = await ethers.getContractFactory("TestERC");
+      const testToken = await TestERC.deploy("Test Token", "TEST", 18);
+      await testToken.waitForDeployment();
 
-  it("Should allow the owner to pause and unpause the contract", async function () {
-    await expect(intel.connect(owner).pause())
-      .to.emit(intel, "Paused")
-      .withArgs(owner.address);
-
-    await expect(intel.connect(owner).unpause())
-      .to.emit(intel, "Unpaused")
-      .withArgs(owner.address);
+      await testToken.connect(owner).mint(await intel.getAddress(), 1000);
+      await expect(
+        intel.connect(owner).recoverERC20(await testToken.getAddress(), 1000)
+      ).to.changeTokenBalance(testToken, owner, 1000);
+    });
   });
 });

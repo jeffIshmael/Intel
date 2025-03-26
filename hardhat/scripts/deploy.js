@@ -21,6 +21,8 @@ main().catch((error) => {
   process.exitCode = 1;
 });
 
+//mainnet - 0xf8F2Dc7501d17E322efBE257c38f15Fe58Dcdcac
+//without deposit - 0x41cE8b8be26d38b065700336EB77aEa98C9CE580
 //moch stakingPool = 0x66BF5390857F4112F671a5B71FEa28eaf579ed99
 //testne = 0xbF759c7F342eA07DfBCC8051179A38B4C066C180
 //mainnet = 0x5CFE907EDFbD492cf1C4D8Be6D41cF2E4C5bc2B8

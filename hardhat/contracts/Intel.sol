@@ -190,9 +190,4 @@ contract Intel is Ownable, ReentrancyGuard, Pausable {
     function getUserRewards(address user) external view returns (uint256) {
         return IStakingPool(stakingPool).getRewards(user);
     }
-
-    //function to get user stake
-     function getUserStake(address user) external view returns (uint256 amount) {
-        return userStakes[user].amount;
-    }
 }
