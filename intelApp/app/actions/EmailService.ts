@@ -4,8 +4,8 @@ import nodemailer from "nodemailer";
 import 'dotenv/config'; 
 
 
-const intelEmail = process.env.INTEL_EMAIL;
-const intelPass = process.env.INTEL_PASS;
+const intelEmail = process.env.INTEL_EMAIL as string;
+const intelPass = process.env.INTEL_PASS as string;
 
 
 if (!intelEmail || !intelPass) {
