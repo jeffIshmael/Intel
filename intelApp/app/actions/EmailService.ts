@@ -10,6 +10,7 @@ const intelPass = process.env.INTEL_PASS;
 
 if (!intelEmail || !intelPass) {
   console.warn("⚠️ Intel email and pass not found.");
+  throw new Error("⚠️ Intel email and pass not found.");
 } else {
   console.log("Email and Pass: Loaded successfully");
 }
