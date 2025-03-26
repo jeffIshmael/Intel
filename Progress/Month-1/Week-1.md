@@ -10,7 +10,7 @@
 
 ## **Achievements**  
 ✅ Integrated a tool to fetch staking pools.  
-✅ Developed a basic algorithm for evaluating profitability.  
+✅ Used Nebula AI to determine the best pool.  
 ✅ Built an initial version of the frontend.  
   
 

@@ -3,13 +3,11 @@
 ### Date: [17 Feb 2025] - [23 Feb 2025]
 
 ## **Goals for the Week**  
-- Enable users to manually stake cUSD into chosen liquidity pools.  
 - Start designing the AI agent to evaluate and stake funds automatically. 
 - Implement authentication for secure user access.   
 - Improve the frontend UI/UX based on user testing.  
 
-## **Achievements**  
-✅ Implemented manual staking functionality.   
+## **Achievements**   
 ✅ Defined core AI logic for automated staking pool selection. 
 ✅ Implemented user authentication. 
 ✅ Improved frontend design and responsiveness. 

@@ -2,7 +2,7 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/jeff/inte/intel/hardhat/contracts/Intel.sol": {
-      "lastModificationDate": 1742786911146,
+      "lastModificationDate": 1742981571045,
       "contentHash": "3fdcb78ccc30011d6163e2970a09f576",
       "sourceName": "contracts/Intel.sol",
       "solcConfig": {
@@ -606,6 +606,44 @@
       ],
       "artifacts": [
         "IERC165"
+      ]
+    },
+    "/home/jeff/inte/intel/hardhat/contracts/TestMoolaMarket.sol": {
+      "lastModificationDate": 1742934883264,
+      "contentHash": "ded2b688af15f21b0fd66e70248244bf",
+      "sourceName": "contracts/TestMoolaMarket.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "TestMoolaMarket"
       ]
     }
   }

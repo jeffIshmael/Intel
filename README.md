@@ -1,10 +1,11 @@
 <p align="center">
-  <img src="./intelLogo.png" alt="logo" width="100" style="border-radius: 50%;">
+  <img src="./intelLogo.png" alt="Intel Logo" width="100" style="border-radius: 50%;">
+  <h1 align="center">Intel: AI-Optimized DeFi Staking Protocol</h1>
+  <p align="center">Maximize your cUSD yields with intelligent, automated liquidity pool allocation</p>
 </p>
-<h1 align="center">Intel</h1>
 
 ## Introduction
-An AI-driven staking protocol that automatically allocates cUSD into liquidity pools, maximizing returns and fully optimized.
+Intel is an advanced AI-driven staking protocol that automatically allocates cUSD into optimal liquidity pools within the Celo ecosystem.
 
 ## Problem Statement
 
@@ -44,26 +45,53 @@ The primary objectives of Intel are:
  3. **Blockchain integration:** ThirdWeb, Ethers.Js
  4. **ORM:** Prisma
  5. **API integration:** DeFiLlama API
+ 6. **Nebula AI:** To determine the best pool to stake to.
 
 ## Workflow
 
 1. Using the DeFiLlama API, the platform fetchs all Celo-based liquidity pools that support cUSD.
-2.  A specialized algorithm analyzes and identifies the most profitable pool from the fetched data, optimizing returns.
-3.  AI agents automatically verify whether the user has staked in the best pool. If not, the system executes the stake on behalf of the user, ensuring a hands-free, optimized DeFi experience.
+2. Nebula AI analyzes and identifies the most profitable pool from the fetched data, optimizing returns.
+3. User sends cUSD to the AI wallet. (Technically, this is sending to Intel smartContract address).
+4. Intel AI agent sends funds from the smart contract to the best satking pool address.
+5. When user withdraws(i.e Unstake) the ai agent withdraws from the staking pool, goes to the contract address then to the user.
 
 ## How Intel works
 
-1. **Account Creation** – The user signs up for an Intel account using their email.
+1. **Data Fetching** – The platform uses the DeFiLlama API to fetch all Celo-based liquidity pools supporting cUSD.
 
-2. **Wallet Generation** – Upon registration, an Intel wallet is automatically created for the user.
+2. **AI Optimization** – Nebula AI analyzes the pools and selects the most profitable one.
 
-3. **Depositing Funds** – The user deposits cUSD into their Intel wallet. If they choose to have the AI agent manage staking, they simply transfer funds to the AI wallet.
+3. **User Deposit** – Users deposit cUSD into their Intel wallet (Smart Contract Address).
 
-4. **Real-Time Notifications** – Users receive instant email notifications, keeping them informed of all AI-driven staking activities and transactions.
+4. **AI Staking** – The AI agent automatically stakes funds in the best available pool.
+
+5. **Withdrawals** – When a user requests a withdrawal, the AI unstakes, routes funds back to the contract, and sends them to the user.
+
+
+## ✅ Successfully implemented Features
+
+**=>** DeFiLlama API Integration – Fetches live liquidity pool data.
+**=>** AI driven optimization - Using Nebula AI to determine the best pool.
+**=>** Smart Contract deployment – Manages the staking to staking pools.
+**=>** Real-Time Email Notifications – Keeps users updated on staking activities.
+**=>** User-Friendly Dashboard – Allows users to see their portfolio.
+
+## 🚧 Features under implementation
+
+**AI-Driven Smart Contract Integration**
+- Developing a smart account on Thirdweb, which will serve as the AI wallet. This will facilitate seamless fund transfers between the smart contract and staking pools, ensuring automated staking with zero friction.
+
+**Intelligent Unstaking & Fund Reallocation**
+- Implementing a cron job to continuously monitor liquidity pools for the most optimal staking opportunities. If a better pool is identified, the AI agent will dynamically unstake and reallocate funds to maximize returns.
+
+**Enhanced UI/UX for a Superior User Experience**
+- Refining the platform’s interface and interactions to deliver a more intuitive and engaging experience, ensuring smooth navigation and improved accessibility for all users
+
+
 
 ## Demo
 1. To create your Intel account, visit our live website: [https://intel-mocha.vercel.app/](https://intel-mocha.vercel.app).
-2. Watch our video demo here: [Video Link](https://www.loom.com/share/aadaaf0a38424c4cb9dea7912257fa29?sid=3221ad2b-e1de-4f06-9633-58714866d7f1).
+2. Watch our video demo here: [Video Link](https://www.loom.com/share/6deb4d5e09334255a1e5d154655fe437?sid=5685e50a-627d-4667-86a5-d4b8a57ebede).
 
 ---
 
