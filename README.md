@@ -68,13 +68,17 @@ The primary objectives of Intel are:
 5. **Withdrawals** – When a user requests a withdrawal, the AI unstakes, routes funds back to the contract, and sends them to the user.
 
 
-## ✅ Successfully implemented Features
+## <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/check-circle.svg" width="20" height="20" /> Successfully implemented Features
 
-1. **DeFiLlama API Integration** – Fetches live liquidity pool data.
-2. **AI driven optimization** - Using Nebula AI to determine the best pool.
-3. **Smart Contract deployment** – Manages the staking to staking pools.
-4. **Real-Time Email Notifications** – Keeps users updated on staking activities.
-5. **User-Friendly Dashboard** – Allows users to see their portfolio.
+1. **DeFiLlama API Integration** - Fetches live liquidity pool data.
+
+2. **AI driven optimization** - Using Nebula AI to determine the best pool. [https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa](https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa)
+
+3. **Smart Contract deployment** - Manages the staking to staking pools.
+
+4. **Real-Time Email Notifications** - Keeps users updated on staking activities.
+
+5. **User-Friendly Dashboard** - Allows users to see their portfolio.
 
 ## 🚧 Features under implementation
 
