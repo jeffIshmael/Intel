@@ -4,7 +4,7 @@ import { FaExchangeAlt, FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
 import QRCode from "./QRCode";
-import { sendEmailToAllStakedUsers, updateStakedPool } from "@/lib/functions";
+import { sendConfirmationEmail, sendEmailToAllStakedUsers, sendStakingEmail, updateStakedPool } from "@/lib/functions";
 import { sendcUSD, stakecUSD } from "@/lib/allfunctions";
 import { intelContractAddress } from "@/Blockchain/intelContract";
 import { getStake } from "@/lib/TokenTransfer";
@@ -120,6 +120,7 @@ export default function TransferModal({
   useEffect(() => {
     const fetchBalance = async () => {
       const stake = await getStake(address);
+      console.log(stake);
       setUserStake(Number(stake));
     };
     fetchBalance();
@@ -212,9 +213,10 @@ export default function TransferModal({
           //   "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
           // );
           // console.log("Send to staking pool tx:", outcome);
-          const emails = await sendEmailToAllStakedUsers();
+           await sendConfirmationEmail(Number(userId), amount);
+           await sendStakingEmail(Number(userId), amount);
           toast("An update will be sent to your email.");
-          console.log(emails);
+          console.log();
         } else {
           toast.error("Something bad happened.");
         }

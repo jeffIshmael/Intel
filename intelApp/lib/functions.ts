@@ -2,7 +2,7 @@
 
 //This file contains all the functions that involve use of ORM i.e Prisma
 import prisma from "./db";
-import  {sendEmail}  from "../app/actions/EmailService"; 
+import { sendEmail } from "../app/actions/EmailService";
 
 //function to get a user's details
 export async function getUser(userId: number) {
@@ -17,7 +17,8 @@ export async function getUser(userId: number) {
         staked: true,
         aiBalance: true,
         privateKey: true,
-        pools: {  // Include pools
+        pools: {
+          // Include pools
           select: {
             id: true,
             name: true,
@@ -43,7 +44,7 @@ export async function getCurrentStakedPool(userId: number) {
     select: {
       name: true,
       amountStaked: true,
-      poolSpec:true,
+      poolSpec: true,
     },
   });
 
@@ -90,7 +91,7 @@ export async function updateStakedPool(
     await prisma.pool.create({
       data: {
         name: "New AI Staking Pool",
-        poolSpec: poolIdentifier, // Use the provided unique identifier
+        poolSpec: poolIdentifier,
         amountStaked: amount,
         stakerId: userId,
       },
@@ -100,7 +101,7 @@ export async function updateStakedPool(
       data: {
         staked: true,
       },
-    })
+    });
 
     console.log("New pool staked successfully.");
   }
@@ -219,41 +220,40 @@ export async function updateAIBalance(
 }
 
 //function to handle unstaking
-export async function updateUnstaking(userId:number){
-  try{
+export async function updateUnstaking(userId: number) {
+  try {
     //update user details
     const existingUser = await prisma.user.findUnique({
-      where:{
-        id:userId
-      }
-    })
-    if(existingUser){
+      where: {
+        id: userId,
+      },
+    });
+    if (existingUser) {
       await prisma.user.update({
-        where:{
-          id: existingUser.id
+        where: {
+          id: existingUser.id,
         },
-        data:{
-        staked: false,       
-        }
-      })
-    }else{
-      console.log("User not found.")
+        data: {
+          staked: false,
+        },
+      });
+    } else {
+      console.log("User not found.");
     }
-
-  }catch(error){
+  } catch (error) {
     console.log(error);
   }
 }
 
-//function to send email to all staked users
+//function to send email to all staked users( will happen if a the AI reallocates the funds)
 export async function sendEmailToAllStakedUsers() {
   try {
     const stakedUsers = await prisma.user.findMany({
       where: { staked: true },
       select: { email: true },
     });
-     // Loop through each staked user and send an email
-     for (const user of stakedUsers) {
+    // Loop through each staked user and send an email
+    for (const user of stakedUsers) {
       const email = user.email;
       const subject = "Intel AI Has Successfully Staked to Moola Market!";
 
@@ -269,7 +269,7 @@ export async function sendEmailToAllStakedUsers() {
       
       Best regards,  
       Intel AI Team`;
-      
+
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
           <h2 style="color: #2c3e50;">Intel AI Has Successfully Staked to Moola Market!</h2>
@@ -294,12 +294,129 @@ export async function sendEmailToAllStakedUsers() {
           </p>
         </div>
       `;
-      
+
       await sendEmail(email, subject, text, html);
       console.log(`Email sent to ${email}`);
     }
 
     console.log("Emails sent to all staked users.");
-  }catch(error){
+  } catch (error) {
     console.log(error);
-  }}
+  }
+}
+
+//tells the user that the amount has been received successfully
+export async function sendConfirmationEmail(userId: number, amount: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (user) {
+      const email = user.email;
+      const subject = "Your Transfer to Intel AI Wallet Was Successful!";
+
+      const text = `Dear Valued User,
+      
+      We’re pleased to confirm that your recent transfer of ${amount} cUSD to your Intel AI wallet was successful.
+      
+      The amount you sent has been securely received and is now ready for Intel AI to begin intelligent staking on your behalf.
+      
+      Thank you for trusting Intel to manage your assets smartly and efficiently.
+      
+      Best regards,  
+      Intel AI Team`;
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #2c3e50;">Your Transfer to Intel AI Wallet Was Successful!</h2>
+          <p style="font-size: 16px; color: #555;">
+            Dear Valued User,
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            We’re pleased to confirm that your recent transfer to your <strong>Intel AI wallet</strong> was successful.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            The amount has been securely received and is now ready for our AI agent to begin <strong>smart, automated staking</strong> on your behalf.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Thank you for choosing Intel — where staking is smarter and simpler.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Best regards,  
+            <br>
+            <strong>Intel AI Team</strong>
+          </p>
+        </div>
+      `;
+
+      await sendEmail(email, subject, text, html);
+      console.log(`Email sent to ${email}`);
+    }
+
+    console.log("Confirmatory email sent to the user..");
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// tells the user that te AI has staked.
+export async function sendStakingEmail(userId: number, amount: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    if (user) {
+      const email = user.email;
+      const subject = "Intel AI Has Successfully Staked to Moola Market!";
+
+      const text = `Dear Valued User,
+      
+      We are excited to inform you that Intel AI has successfully staked to Moola Market. 
+      Your trust and participation in our platform are truly appreciated.
+      
+      By staking, you contribute to a secure and thriving ecosystem while gaining exclusive 
+      benefits within the Moola Market staking Pool.
+      
+      Thank you for being a part of this journey with us.
+      
+      Best regards,  
+      Intel AI Team`;
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h2 style="color: #2c3e50;">Intel AI Has Successfully Staked to Moola Market!</h2>
+          <p style="font-size: 16px; color: #555;">
+            Dear Valued User,  
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            We are excited to inform you that <b>Intel AI</b> has successfully staked to <b>Moola Market</b>. 
+            Your trust and participation in our platform are truly appreciated.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            By staking, you contribute to a <b>secure</b> and <b>thriving ecosystem</b> while gaining exclusive 
+            benefits within the Moola Market community.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Thank you for being a part of this journey with us.
+          </p>
+          <p style="font-size: 16px; color: #555;">
+            Best regards,  
+            <br>
+            <strong>Intel AI Team</strong>
+          </p>
+        </div>
+      `;
+
+      await sendEmail(email, subject, text, html);
+      console.log(`Email sent to ${email}`);
+    }
+
+    console.log("Staking email sent to the user.");
+  } catch (error) {
+    console.log(error);
+  }
+}

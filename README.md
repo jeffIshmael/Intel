@@ -72,9 +72,9 @@ The primary objectives of Intel are:
 
 1. **DeFiLlama API Integration** - Fetches live liquidity pool data.
 
-2. **AI driven optimization** - Using Nebula AI to determine the best pool. [https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa](https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa)
+2. **AI driven optimization** - Using Nebula AI to determine the best pool.
 
-3. **Smart Contract deployment** - Manages the staking to staking pools.
+3. **Smart Contract deployment** - Manages the staking to staking pools.[https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa](https://celoscan.io/address/0x95deca6a1604a4d3ab29332ad26fc0caf0de15fa)
 
 4. **Real-Time Email Notifications** - Keeps users updated on staking activities.
 
