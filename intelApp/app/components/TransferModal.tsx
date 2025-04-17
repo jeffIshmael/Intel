@@ -124,7 +124,7 @@ export default function TransferModal({
       setUserStake(Number(stake));
     };
     fetchBalance();
-  }, [userStake]);
+  }, [userStake, address]);
 
   //new staking function
   const handleContractStaking = async () => {

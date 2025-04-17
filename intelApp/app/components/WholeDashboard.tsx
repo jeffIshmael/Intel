@@ -135,7 +135,6 @@ const WholeDashboard = () => {
           },
         });
         const data = await response.json();
-        (`fetched pool: ${data}`)
 
         if (data) {
           // Update pools and best pools
