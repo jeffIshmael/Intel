@@ -1,5 +1,5 @@
 export const intelContractAddress =
-  "0x95DEca6A1604A4D3aB29332AD26fc0caF0dE15FA";
+  "0x137d84aF92BC35b9C2362dA9DD34b561b339cAf5";
 export const intelAbi =[
   {
     "inputs": [
@@ -289,6 +289,25 @@ export const intelAbi =[
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getUserStake",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
         "type": "uint256"
       }
     ],

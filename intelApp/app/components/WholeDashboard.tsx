@@ -110,6 +110,7 @@ const WholeDashboard = () => {
     if (user) {
       setUser(user);
       const result = await getCurrentStakedPool(userId);
+      console.log(`result of stakedpool: ${result}.`)
       if (result) {
         setStakedPool(result.poolSpec);
         setAmountStaked(Number(result.amountStaked));
@@ -144,6 +145,7 @@ const WholeDashboard = () => {
           const currentPoolFromData = data.cUSDStableCoins.find(
             (pool: Pool) => pool.pool === stakedPool
           );
+          console.log(`current pool from the received pools:${currentPoolFromData}.`);
           if (currentPoolFromData) {
             setCurrentPool(currentPoolFromData);
           }
@@ -159,7 +161,7 @@ const WholeDashboard = () => {
     if (user?.id || stakedPool) {
       fetchPools();
     }
-  }, [user?.id, stakedPool]);
+  }, [user, stakedPool]);
 
   //fetching best pool according to AI
   useEffect(() => {

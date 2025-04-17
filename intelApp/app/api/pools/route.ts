@@ -235,7 +235,7 @@ export async function POST(request: Request) {
       const textData = await response.text(); // Get raw text response
       // const textData = await response.text();
       const data = response.ok ? JSON.parse(textData) : null;
-      console.log("Raw API Response:", textData);
+      // console.log("Raw API Response:", textData);
 
       try {
         // const data = JSON.parse(textData); // Try parsing JSON
@@ -243,7 +243,7 @@ export async function POST(request: Request) {
         if (!data.message) throw new Error("No message in API response");
 
         const match = data.message.match(/^(.+?) \[(.+?)\]\n(.+)$/);
-        console.log(match);
+        // console.log(match);
 
         if (!match) {
           return NextResponse.json(

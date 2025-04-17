@@ -50,19 +50,19 @@ async function getBestPool(pools) {
       (pool) => `- ${pool.pool} (${pool.project}) [${pool.poolMeta || "No ID"}]`
     )
     .join("\n");
-  console.log(formattedPools);
+  // console.log(formattedPools);
   const message = `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`;
 
   const requestBody = {
     message,
   };
 
-  console.log("Query Contract Request Body:", requestBody);
+  // console.log("Query Contract Request Body:", requestBody);
 
   // Make the API request
   const response = await apiRequest("/chat", "POST", requestBody);
 
-  console.log("Query Contract Response:", response);
+  // console.log("Query Contract Response:", response);
 
   return response.message; // Return the structured response from Nebula
 }

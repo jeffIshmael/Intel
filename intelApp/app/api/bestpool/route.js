@@ -17,7 +17,7 @@ export async function POST(request) {
     const data = await getBestPool(stablecoinPools);
     // const data = stablecoinPools;
     const match = data.match(/^(.+?) \[(.+?)\]\n(.+)$/);
-    console.log(match);
+    // console.log(match);
 
     if (!match) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request) {
       id: match[2].trim(),
       reason: match[3].trim(),
     };
-    console.log(bestPool);
+    // console.log(bestPool);
     return new Response(JSON.stringify(bestPool), {
       status: 200,
       headers: { "Content-Type": "application/json" },
