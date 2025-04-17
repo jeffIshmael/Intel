@@ -146,7 +146,7 @@ const WholeDashboard = () => {
           const currentPoolFromData = data.cUSDStableCoins.find(
             (pool: Pool) => pool.pool === stakedPool
           );
-          console.log(`current pool from the received pools:${currentPoolFromData}.`)
+          console.log(`current pool from the received pools:${currentPoolFromData}.`);
           if (currentPoolFromData) {
             setCurrentPool(currentPoolFromData);
           }

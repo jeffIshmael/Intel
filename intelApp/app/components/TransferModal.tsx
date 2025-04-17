@@ -4,7 +4,7 @@ import { FaExchangeAlt, FaTimes } from "react-icons/fa";
 import { toast } from "sonner";
 
 import QRCode from "./QRCode";
-import { sendConfirmationEmail, sendEmailToAllStakedUsers, sendStakingEmail, updateStakedPool } from "@/lib/functions";
+import { sendConfirmationEmail, sendStakingEmail, updateStakedPool } from "@/lib/functions";
 import { sendcUSD, stakecUSD } from "@/lib/allfunctions";
 import { intelContractAddress } from "@/Blockchain/intelContract";
 import { getStake } from "@/lib/TokenTransfer";

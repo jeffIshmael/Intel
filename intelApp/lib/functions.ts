@@ -375,7 +375,7 @@ export async function sendStakingEmail(userId: number, amount: string) {
 
       const text = `Dear Valued User,
       
-      We are excited to inform you that Intel AI has successfully staked to Moola Market. 
+      We are excited to inform you that Intel AI has successfully staked ${amount} cUSD to Moola Market. 
       Your trust and participation in our platform are truly appreciated.
       
       By staking, you contribute to a secure and thriving ecosystem while gaining exclusive 
