@@ -41,6 +41,7 @@ contract Intel is Ownable, ReentrancyGuard, Pausable {
     event StakingPoolUpdated(address indexed newStakingPool);
     event CUSDUpdated(address indexed newCUSD);
     event MoolaMarketProxyUpdated(address indexed newMoolaMarketProxy);
+    event Reallocated(address indexed pool, uint256 amount);
 
     constructor(address _cUSD, address _aiAgent, address _moolaMarketProxy) Ownable(msg.sender) {
         require(_cUSD != address(0), "Invalid cUSD address");
@@ -161,6 +162,32 @@ contract Intel is Ownable, ReentrancyGuard, Pausable {
         moolaMarketProxy = _moolaMarketProxy;
         emit MoolaMarketProxyUpdated(_moolaMarketProxy);
     }
+
+
+    /**
+     * @notice Handles reallocation of staked funds.
+     */
+    function reallocation(address _stakingPool) external nonReentrant whenNotPaused onlyAIAgent{
+        require(_stakingPool != address(0), "Invalid contract address.");
+        require(contractUnstakedBalance > 0, "No unstaked funds to reallocate.");
+        uint256 amount = totalStaked - contractUnstakedBalance;
+
+        // Withdraw from Moola Market
+        IMoolaMarket(moolaMarketProxy).withdraw(
+            address(cUSD), // cUSD address
+            amount,        // Amount to withdraw
+            address(this)     // Address to receive the funds
+        );
+
+        // Stake in the new pool
+        IStakingPool(_stakingPool).stake(amount);
+
+        // Update the staking pool address
+        stakingPool = _stakingPool;
+
+        emit Reallocated(stakingPool, amount);
+    }
+
 
     /**
      * @notice Pauses the contract.

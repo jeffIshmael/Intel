@@ -51,13 +51,13 @@ async function getBestPool(pools) {
     )
     .join("\n");
   // console.log(formattedPools);
-  const message = `Here are the pools I retrieved:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`;
+  const message = `You are a deFi expert and you are tasked with finding the best pool to stake on. Here are the pools you are given to choose from:\n\n${formattedPools}\n\nFrom the above pools, which pool is the best to stake on? Give just the name with the unique identifier in brackets. Then a reason on the next line.`;
 
   const requestBody = {
     message,
   };
 
-  // console.log("Query Contract Request Body:", requestBody);
+  // console.log("Query Contract Request Body:", requestBody);  
 
   // Make the API request
   const response = await apiRequest("/chat", "POST", requestBody);

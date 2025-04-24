@@ -19,8 +19,7 @@ model User {
   privateKey String
   passPhrase String
   password String
-  aiBalance BigInt @default(0)
-  pools Pool[]
+  emailed Boolean @default(false)
   staked Boolean @default(false)
   notifications Notification[]
   transactions Transaction[]
@@ -48,8 +47,5 @@ model Pool {
   id           Int      @id @default(autoincrement())
   name         String
   poolSpec     String
-  amountStaked BigInt  @default(0)  // Using BigInt for large numbers
-  staker       User    @relation(fields: [stakerId], references: [id])
-  stakerId     Int
   createdAt    DateTime @default(now())  // Timestamp for tracking
 }

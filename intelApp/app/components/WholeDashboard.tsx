@@ -12,18 +12,14 @@ import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
 import { ethers, Signer } from "ethers";
-import {
-  createTransaction,
-  updateStakedPool,
-  getCurrentStakedPool,
-  updateUnstaking,
-} from "@/lib/functions";
+import { createTransaction, getCurrentPool } from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
 import Link from "next/link";
 import { getBestPool } from "@/scripts/Nebula.mjs";
 import { getFallbackPool } from "@/lib/helperFunctions";
+import { getStake } from "@/lib/TokenTransfer";
 
 const contract = getContract({
   client,
@@ -71,7 +67,7 @@ interface User {
   email: string;
   passPhrase: string;
   address: string;
-  aiBalance: bigint;
+  emailed: boolean;
   staked: boolean;
   privateKey: string;
 }
@@ -87,14 +83,13 @@ const WholeDashboard = () => {
   const [poolToStake, setPoolToStake] = useState("");
   const [stakedPool, setStakedPool] = useState("");
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
-  const [amountStaked, setAmountStaked] = useState(0);
   const [fetching, setFetching] = useState(false);
   const [buttonText, setButtonText] = useState("");
   const [unstakingButtonText, setUnstakingButtonText] = useState("");
   const [stablecoinPoolspec, setstablecoinPoolspec] = useState("");
   const [isStaking, setIsStaking] = useState(false);
   const [unstaking, setUnstaking] = useState(false);
-  const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
+  const [amountStaked, setAmountStaked] = useState(0);
   const [reason, setReason] = useState("");
   const [showReason, setShowReason] = useState(false);
   const [fetchingPool, setFetchingPool] = useState(false);
@@ -105,63 +100,27 @@ const WholeDashboard = () => {
     params: [user?.address ?? ""], // type safe params
   });
 
-  async function fetchUser(userId: number) {
-    const user = await getUser(userId);
-    if (user) {
-      setUser(user);
-      const result = await getCurrentStakedPool(userId);
-      console.log(`result of stakedpool: ${result}.`)
-      if (result) {
-        setStakedPool(result.poolSpec);
-        setAmountStaked(Number(result.amountStaked));
-      }
-    }
-  }
-
   useEffect(() => {
     if (session?.user?.id) {
       fetchUser(Number(session.user.id));
     }
   }, [session]);
 
-  useEffect(() => {
-    const fetchPools = async () => {
-      try {
-        setFetching(true);
-        const response = await fetch("/api/pools", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await response.json();
-
-        if (data) {
-          // Update pools and best pools
-          setStablecoinPools(data.cUSDStableCoins);
-          // setBestPool(data.bestCUSDPool);
-
-          // Find the current pool based on `stakedPool`
-          const currentPoolFromData = data.cUSDStableCoins.find(
-            (pool: Pool) => pool.pool === stakedPool
-          );
-          console.log(`current pool from the received pools:${currentPoolFromData}.`);
-          if (currentPoolFromData) {
-            setCurrentPool(currentPoolFromData);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching pools:", error);
-      } finally {
-        setFetching(false);
+  async function fetchUser(userId: number) {
+    const user = await getUser(userId);
+    if (user) {
+      setUser(user);
+      const userStake = await getStake(user.address);
+      const result = await getCurrentPool();
+      console.log(`result of stakedpool: ${result}.`);
+      if (result) {
+        setStakedPool(result.poolSpec);
       }
-    };
-
-    // Only fetch pools when `user?.id` or `stakedPool` changes
-    if (user?.id || stakedPool) {
-      fetchPools();
+      if (userStake) {
+        setAmountStaked(Number(userStake));
+      }
     }
-  }, [user, stakedPool]);
+  }
 
   //fetching best pool according to AI
   useEffect(() => {
@@ -172,7 +131,8 @@ const WholeDashboard = () => {
     const poolToStake = stablecoinPools.filter(
       (pool) => pool.project.toLowerCase() !== "uniswap-v3"
     );
-    setBestAIStakingPool(poolToStake[0]);
+    // setBestAIStakingPool(poolToStake[0]);
+    console.log("Best AI Staking Pool:", poolToStake[0]);
     const getPool = async () => {
       try {
         setFetchingPool(true);
@@ -209,6 +169,47 @@ const WholeDashboard = () => {
 
     getPool();
   }, [stablecoinPools]);
+
+  useEffect(() => {
+    const fetchPools = async () => {
+      try {
+        setFetching(true);
+        const response = await fetch("/api/pools", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+
+        if (data) {
+          // Update pools and best pools
+          setStablecoinPools(data.cUSDStableCoins);
+          // setBestPool(data.bestCUSDPool);
+
+          // Find the current pool based on `stakedPool`
+          const currentPoolFromData = data.cUSDStableCoins.find(
+            (pool: Pool) => pool.pool === stakedPool
+          );
+          console.log(
+            `current pool from the received pools:${currentPoolFromData}.`
+          );
+          if (currentPoolFromData) {
+            setCurrentPool(currentPoolFromData);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching pools:", error);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    // Only fetch pools when `user?.id` or `stakedPool` changes
+    if (user?.id || stakedPool) {
+      fetchPools();
+    }
+  }, [user, stakedPool]);
 
   //function to approve cUSD sending to a pool
   const approveCUSD = async (amount: number, signer: Signer) => {
@@ -344,11 +345,7 @@ const WholeDashboard = () => {
         );
         console.log(transaction);
         console.log(pool);
-        await updateStakedPool(
-          user?.id ?? 0,
-          stablecoinPoolspec,
-          BigInt(amount * 10 ** 18)
-        );
+
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -404,84 +401,7 @@ const WholeDashboard = () => {
     }
   };
 
-  const handleAIStaking = async (
-    amount: number,
-    poolSpec: string,
-    poolName: string
-  ) => {
-    const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
-    const privateKey = user?.privateKey ?? "";
-    const signer = new ethers.Wallet(privateKey, provider);
-    try {
-      await approveCUSD(amount, signer);
-      const result = await stakeCUSD(amount, signer);
-      if (result) {
-        const transaction = await createTransaction(
-          user?.id ?? 0,
-          result.hash,
-          "You staked",
-          amount
-        );
-        console.log(transaction);
-        await updateStakedPool(
-          user?.id ?? 0,
-          poolSpec,
-          BigInt(amount * 10 ** 18)
-        );
-        toast.success(
-          <div className="flex items-center space-x-4">
-            {/* Icon for visual appeal */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-green-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-
-            {/* Main Content */}
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                Successfully staked {amount} cUSD to {poolName}.
-              </p>
-              <p className="text-sm text-gray-600">
-                <a
-                  href={`https://celoscan.io/tx/${result.hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                >
-                  Explore on CeloScan
-                </a>
-              </p>
-            </div>
-          </div>,
-          {
-            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
-            style: {
-              borderLeft: "4px solid #34C759", // Green border for success
-            },
-            duration: 5000,
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Staking failed:", error);
-      toast.error("Unable to stake.", {
-        description: "Make sure you have enough gas.",
-      });
-      setIsStaking(false);
-    } finally {
-      setIsStaking(false);
-    }
-  };
+ 
   // Copy wallet address
   const copyToClipboard = () => {
     const address = user?.address || "";
@@ -509,7 +429,6 @@ const WholeDashboard = () => {
           amount
         );
         console.log(transaction);
-        await updateUnstaking(user?.id ?? 0);
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -695,14 +614,9 @@ const WholeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* wallet section */}
           <TransferModal
-            balance={Number(balance) / 10 ** 18}
-            aiBalance={Number(user?.aiBalance ?? 0)}
             address={user?.address ?? ""}
             userId={(user?.id ?? "defaultId").toString()}
-            poolSpec={bestAIStakingPool?.pool ?? ""}
-            poolName={bestAIStakingPool?.project ?? ""}
             privKey={user?.privateKey ?? ""}
-            stake={handleAIStaking}
           />
           {/* staked pool section */}
           <div className="bg-gray-700 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">

@@ -1,32 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
-import { FaExchangeAlt, FaTimes } from "react-icons/fa";
+import { FaExchangeAlt, FaTimes, FaArrowRight, FaQrcode } from "react-icons/fa";
+import { FiExternalLink } from "react-icons/fi";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 import QRCode from "./QRCode";
-import { sendConfirmationEmail, sendStakingEmail, updateStakedPool } from "@/lib/functions";
-import { sendcUSD, stakecUSD } from "@/lib/allfunctions";
+import { sendConfirmationEmail } from "@/lib/functions";
+import { getBalance, sendcUSD, stakecUSD } from "@/lib/allfunctions";
 import { intelContractAddress } from "@/Blockchain/intelContract";
 import { getStake } from "@/lib/TokenTransfer";
+import Withdraw from "./Withdraw";
 
 export default function TransferModal({
-  balance,
-  aiBalance,
   address,
   userId,
-  poolSpec,
-  poolName,
   privKey,
-  stake,
+
 }: {
-  balance: number;
-  aiBalance: number;
   address: string;
   userId: string;
-  poolSpec: string;
-  poolName: string;
   privKey: string;
-  stake: (amount: number, poolSpec: string, poolName: string) => Promise<void>;
+
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -34,99 +29,27 @@ export default function TransferModal({
   const [qrOpen, setQrOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [userStake, setUserStake] = useState<number | null>(null);
+  const [userBalance, setUserBalance] = useState<number | null>(null);
 
-  useEffect(() => {
-    // Automatically stake if AI balance is positive
-    if (aiBalance > 0) {
-      toast.info("AI wallet balance is positive. Staking funds...");
-      stake(aiBalance, poolSpec, poolName);
+  //getting realtime balance and ai balance
+  const getUserBalance = async () => {
+    try {
+      const [walletBalance, aiBalance] = await Promise.all([
+        getBalance(address as `0x${string}`),
+        getStake(address),
+      ]);
+      setUserBalance(Number(walletBalance));
+      setUserStake(Number(aiBalance));
+    } catch (error) {
+      console.error("Error fetching balances:", error);
+      toast.error("Failed to refresh balances");
     }
-  }, [aiBalance, stake, poolSpec, poolName]); // Runs whenever aiBalance changes
-
-  // const handleTransfer = async () => {
-  //   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-  //     toast.error("Please enter a valid amount.");
-  //     return;
-  //   }
-  //   setLoading(true);
-  //   try {
-  //     toast.info(
-  //       `Transferring ${amount} cUSD ${
-  //         transferType === "toAI" ? "to" : "from"
-  //       } AI Wallet`
-  //     );
-
-  //     // Simulate transfer
-  //     if (transferType === "toAI") {
-  //       const result = await updateAIBalance(
-  //         Number(userId),
-  //         BigInt(Number(amount) * 10 ** 18),
-  //         false
-  //       );
-  //       console.log(result);
-  //       if (result) {
-  //         toast.success(`Transferred ${amount} cUSD to AI Wallet`);
-  //       }
-  //       // A new Promise to handle both stake and updateAIBalance operations
-  //       const stakingPromise = new Promise((resolve, reject) => {
-  //         //  Calling the stake function
-  //         stake(Number(amount), poolSpec, poolName)
-  //           .then((stakeResult) => {
-  //             // After stake succeeds, call updateAIBalance
-  //             return updateAIBalance(
-  //               Number(userId),
-  //               BigInt(Number(amount) * 10 ** 18),
-  //               true
-  //             ).then((updateResult) => {
-  //               // Resolve the Promise with both results
-  //               resolve({ stakeResult, updateResult });
-  //             });
-  //           })
-  //           .catch((error) => {
-  //             // Reject the Promise if any step fails
-  //             reject(error);
-  //           });
-  //       });
-
-  //       // Use toast.promise to show loading, success, and error states
-  //       toast.promise(stakingPromise, {
-  //         loading: "Please wait.Intel AI is staking...",
-  //         success: "Staking completed successfully!",
-  //         error: (err) =>
-  //           `Error during staking: ${err.message || "Unknown error"}`,
-  //       });
-  //     } else {
-  //       const result = await updateAIBalance(
-  //         Number(userId),
-  //         BigInt(Number(amount) * 10 ** 18),
-  //         true
-  //       );
-  //       console.log(result);
-  //       if (result) {
-  //         toast.success(`Withdrawing ${amount} cUSD from AI Wallet`);
-  //       }
-  //     }
-  //     // Closing modal after transfer
-  //     setIsModalOpen(false);
-  //     setLoading(false);
-  //     setAmount("");
-  //   } catch (error) {
-  //     console.log(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  };
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      const stake = await getStake(address);
-      console.log(stake);
-      setUserStake(Number(stake));
-    };
-    fetchBalance();
-  }, [userStake, address]);
+    getUserBalance();
+  }, [address, userBalance, userStake]);
 
-  //new staking function
   const handleContractStaking = async () => {
     try {
       setLoading(true);
@@ -135,195 +58,247 @@ export default function TransferModal({
           transferType === "toAI" ? "to" : "from"
         } AI Wallet`
       );
-      //sending cUSD to thr contract
+
       const result = await sendcUSD(
         privKey as `0x${string}`,
         intelContractAddress as `0x${string}`,
         Number(amount) * 10 ** 18
       );
-      console.log("Sending cUSD tx:", result);
+
       if (result) {
-        //calling smartcontract deposit function
         const hash = await stakecUSD(
           privKey as `0x${string}`,
           Number(amount) * 10 ** 18
         );
-        if (hash) {
-          //update the prisma backend
-          const updatePool = await updateStakedPool(
-            Number(userId),
-            poolSpec,
-            BigInt(Number(amount) * 10 ** 18)
-          );
-          console.log(updatePool);
-          toast.success(
-            <div className="flex items-center space-x-4">
-              {/* Icon for visual appeal */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-green-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
 
-              {/* Main Content */}
-              <div>
-                <p className="text-sm font-medium text-gray-800">
-                  <span className="font-mono">
-                    Successfully sent to AI wallet.
-                    <span>(Intel contract Address)</span>.
-                  </span>
+        if (hash) {
+          toast.success(
+            <div className="flex items-start">
+              <div className="flex-1">
+                <p className="font-medium">Transfer successful!</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {amount} cUSD transferred to AI Wallet
                 </p>
-                <p className="text-sm text-gray-600">
-                  <a
-                    href={`https://celoscan.io/tx/${result}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                  >
-                    Explore on CeloScan
-                  </a>
-                </p>
+                <a
+                  href={`https://celoscan.io/tx/${result}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-blue-500 hover:underline mt-1 text-sm"
+                >
+                  View transaction <FiExternalLink className="ml-1" />
+                </a>
               </div>
             </div>,
             {
-              className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
-              style: {
-                borderLeft: "4px solid #34C759", // Green border for success
-              },
               duration: 5000,
             }
           );
-          // trigger the nebula AI to stake to the best pool
-          // const transaction = await stakecUSD(
-          //   privKey as `0x${string}`,
-          //   Number(amount) * 10 ** 18
-          // );
-          // console.log("Deposit tx:", transaction);
-          // const outcome = await sendToStakingPool(
-          //   privKey as `0x${string}`,
-          //   "0x970b12522CA9b4054807a2c5B736149a5BE6f670"
-          // );
-          // console.log("Send to staking pool tx:", outcome);
-           await sendConfirmationEmail(Number(userId), amount);
-           await sendStakingEmail(Number(userId), amount);
-          toast("An update will be sent to your email.");
-          console.log();
-        } else {
-          toast.error("Something bad happened.");
+
+          await sendConfirmationEmail(Number(userId), amount);
+          toast.info("Updates will be sent to your email");
+          await getUserBalance();
+          setIsModalOpen(false);
+          setAmount("");
         }
       }
     } catch (error) {
-      console.log(error);
-      toast.error("make sure you have enough cUSD.");
+      console.error(error);
+      toast.error("Transaction failed. Please ensure you have enough cUSD.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
-      <h1 className="text-xl font-semibold mb-4">Balance</h1>
-      <div className="flex items-center justify-between bg-gray-700 p-6 rounded-lg">
-        <div className="text-center">
-          <h2 className="text-sm font-medium text-gray-400">Wallet</h2>
-          <p className="text-lg font-bold">
-            {Number.isNaN(balance) ? "--" : balance.toFixed(4)} cUSD
-          </p>
-        </div>
-        <button
-          title="Transfer To/From"
-          onClick={() => setIsModalOpen(true)}
-          className="bg-gray-800 p-3 rounded-full hover:bg-gray-600 transition"
-        >
-          <FaExchangeAlt className="text-white text-xl" />
-        </button>
-        <div className="text-center">
-          <h2 className="text-sm font-medium text-gray-400">AI Wallet</h2>
-          <p className="text-lg font-bold">
-            {Number.isNaN(Number(userStake))
-              ? "--"
-              : (Number(userStake) / 10 ** 18).toFixed(4)}{" "}
-            cUSD
-          </p>
-        </div>
+    <div className="bg-gray-800 text-white p-2 rounded-2xl shadow-xl w-full max-w-md mx-auto">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-900">
+        <h1 className="text-xl font-bold text-white">Wallet Balances</h1>
+        <p className="text-sm text-gray-400 mt-1">
+          Transfer between your wallets
+        </p>
       </div>
-      <div className="flex justify-between mt-4">
-        <button
-          className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg mr-2 transition"
-          onClick={() => setQrOpen(true)}
-        >
-          Deposit
-        </button>
-        <button
-          onClick={() => toast.info("Withdrawal feature coming soon!")}
-          className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-lg ml-2 transition"
-        >
-          Withdraw
-        </button>
+
+      {/* Balances */}
+      <div className="p-4">
+        <div className="flex items-center justify-between bg-gray-700 p-5 rounded-xl">
+          <div className="text-center">
+            <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+              Your Wallet
+            </h2>
+            <p className="text-xl font-bold text-white mt-1">
+              {Number.isNaN(userBalance) ? "--" : userBalance?.toFixed(4)} cUSD
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-all duration-200 hover:rotate-90"
+            aria-label="Transfer funds"
+          >
+            <FaExchangeAlt className="text-white text-lg" />
+          </button>
+
+          <div className="text-center">
+            <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+              AI Wallet
+            </h2>
+            <p className="text-xl font-bold text-white mt-1">
+              {Number.isNaN(Number(userStake))
+                ? "--"
+                : (Number(userStake) / 10 ** 18).toFixed(4)}{" "}
+              cUSD
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={() => setQrOpen(true)}
+            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 px-4 rounded-lg transition-all flex items-center justify-center"
+          >
+            <FaQrcode className="mr-2" /> Deposit
+          </button>
+          <Withdraw privateKey={privKey} balance={userBalance ?? 0} />
+        </div>
       </div>
 
       {/* Transfer Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Transfer Funds</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <FaTimes size={20} />
-              </button>
-            </div>
-
-            <label className="block text-sm text-gray-400 mb-2">
-              Amount (cUSD)
-            </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 mb-4"
-              placeholder="Enter amount"
-            />
-
-            <label className="block text-sm text-gray-400 mb-2">
-              Transfer Type
-            </label>
-            <select
-              value={transferType}
-              onChange={(e) =>
-                setTransferType(e.target.value as "toAI" | "fromAI")
-              }
-              className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 mb-4"
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ y: 20, scale: 0.98 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: -20, scale: 0.98 }}
+              className="relative bg-gray-800 rounded-xl shadow-2xl w-full max-w-md border border-gray-700"
             >
-              <option value="toAI">To AI Wallet</option>
-              <option value="fromAI">From AI Wallet</option>
-            </select>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold text-white">
+                    Transfer Funds
+                  </h2>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
 
-            <button
-              onClick={handleContractStaking}
-              className={`w-full bg-blue-600  text-white font-semibold py-2 px-4 rounded-lg transition${
-                loading ? "opacity-60 cursor-not-allowed" : "hover:bg-blue-500"
-              }`}
-            >
-              {loading ? "transferring.." : "Confirm Transfer"}
-            </button>
-          </div>
-        </div>
-      )}
-      {qrOpen && (
-        <QRCode walletAddress={address} onClose={() => setQrOpen(false)} />
-      )}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                      Amount (cUSD)
+                    </label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0.01"
+                    />
+                    <p className="text-sm text-gray-300 mt-2 mr-0 flex justify-end ">
+                      Available Balance:{" "}
+                      {transferType === "toAI"
+                        ? userBalance?.toFixed(4)
+                        : (Number(userStake) / 10 ** 18).toFixed(4)}{" "}
+                      cUSD
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                      Transfer Direction
+                    </label>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => setTransferType("toAI")}
+                        className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
+                          transferType === "toAI"
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                        }`}
+                      >
+                        To AI Wallet
+                      </button>
+                      <button
+                        onClick={() => setTransferType("fromAI")}
+                        className={`flex-1 py-2 px-4 rounded-lg border transition-colors ${
+                          transferType === "fromAI"
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
+                        }`}
+                      >
+                        From AI Wallet
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleContractStaking}
+                    disabled={loading || !amount}
+                    className={`w-full py-3 px-4 rounded-lg font-medium transition-all flex items-center justify-center ${
+                      loading
+                        ? "bg-blue-600/70 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-500"
+                    } ${
+                      !amount || Number(amount) <= 0
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Confirm Transfer <FaArrowRight className="ml-2" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* QR Code Modal */}
+      <AnimatePresence>
+        {qrOpen && (
+          <QRCode walletAddress={address} onClose={() => setQrOpen(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

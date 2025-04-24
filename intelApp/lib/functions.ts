@@ -15,18 +15,8 @@ export async function getUser(userId: number) {
         email: true,
         passPhrase: true,
         staked: true,
-        aiBalance: true,
         privateKey: true,
-        pools: {
-          // Include pools
-          select: {
-            id: true,
-            name: true,
-            poolSpec: true,
-            amountStaked: true,
-            createdAt: true,
-          },
-        },
+        emailed: true,
       },
     });
 
@@ -37,74 +27,45 @@ export async function getUser(userId: number) {
   }
 }
 
-//function to get the current staked pool
-export async function getCurrentStakedPool(userId: number) {
-  const pool = await prisma.pool.findFirst({
-    where: { stakerId: userId },
-    select: {
-      name: true,
-      amountStaked: true,
-      poolSpec: true,
-    },
-  });
-
-  return pool;
+//function to get the current  pool
+export async function getCurrentPool() {
+  const pool = await prisma.pool.findMany();
+  return pool[0];
 }
 
 //function to create/update a staked pool
-export async function updateStakedPool(
-  userId: number,
-  poolIdentifier: string,
-  amount: bigint
-) {
-  // Check if the user has an existing pool with the same identifier
+export async function updatePool(poolIdentifier: string) {
+  // Check if its the same pool
   const existingPool = await prisma.pool.findFirst({
     where: {
-      stakerId: userId,
-      poolSpec: poolIdentifier, // Pool Identifier (Unique)
+      poolSpec: poolIdentifier,
     },
   });
 
   if (existingPool) {
-    console.log(
-      `Current Pool: ${existingPool.name}, Amount Staked: ${existingPool.amountStaked}`
-    );
-
-    // Update the existing pool's amountStaked by adding the new amount
-    await prisma.pool.update({
-      where: { id: existingPool.id },
-      data: {
-        amountStaked: existingPool.amountStaked + amount,
-      },
-    });
-
-    console.log(
-      `Updated Pool: ${existingPool.name}, New Amount Staked: ${
-        existingPool.amountStaked + amount
-      }`
-    );
-  } else {
-    console.log(
-      "User has no active staked pool with this identifier. Creating a new one..."
-    );
-
-    await prisma.pool.create({
-      data: {
-        name: "New AI Staking Pool",
-        poolSpec: poolIdentifier,
-        amountStaked: amount,
-        stakerId: userId,
-      },
-    });
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        staked: true,
-      },
-    });
-
-    console.log("New pool staked successfully.");
+    console.log(`Current Pool: ${existingPool.name}`);
+    return;
   }
+  console.log(
+    "User has no active staked pool with this identifier. Creating a new one..."
+  );
+
+  await prisma.pool.create({
+    data: {
+      name: "New AI Staking Pool",
+      poolSpec: poolIdentifier,
+    },
+  });
+
+  console.log("New pool successfully updated.");
+}
+
+//function update user's emailed status
+export async function updateUserEmailedStatus(email: string) {
+  await prisma.user.update({
+    where: { email: email },
+    data: { emailed: true, staked: true },
+  });
 }
 
 //function to create a transaction
@@ -178,70 +139,6 @@ export async function getUserNotifications(userId: number) {
   } catch (error) {
     console.error("Error fetching notifications:", error);
     throw error;
-  }
-}
-
-//function to update ai wallet balance
-export async function updateAIBalance(
-  userId: number,
-  amount: bigint,
-  withdraw: boolean
-) {
-  try {
-    let user;
-    if (withdraw) {
-      const result = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          aiBalance: {
-            decrement: amount, // Add amount to existing balance
-          },
-        },
-      });
-      user = result;
-    } else {
-      const result = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          aiBalance: {
-            increment: amount, // Add amount to existing balance
-          },
-        },
-      });
-      user = result;
-    }
-
-    console.log(`AI Balance updated: ${user.aiBalance}`);
-    return user;
-  } catch (error) {
-    console.error("Error updating AI Balance:", error);
-    throw error;
-  }
-}
-
-//function to handle unstaking
-export async function updateUnstaking(userId: number) {
-  try {
-    //update user details
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    if (existingUser) {
-      await prisma.user.update({
-        where: {
-          id: existingUser.id,
-        },
-        data: {
-          staked: false,
-        },
-      });
-    } else {
-      console.log("User not found.");
-    }
-  } catch (error) {
-    console.log(error);
   }
 }
 
@@ -319,7 +216,7 @@ export async function sendConfirmationEmail(userId: number, amount: string) {
 
       const text = `Dear Valued User,
       
-      We’re pleased to confirm that your recent transfer of ${amount} cUSD to your Intel AI wallet was successful.
+      We're pleased to confirm that your recent transfer of ${amount} cUSD to your Intel AI wallet was successful.
       
       The amount you sent has been securely received and is now ready for Intel AI to begin intelligent staking on your behalf.
       
@@ -335,7 +232,7 @@ export async function sendConfirmationEmail(userId: number, amount: string) {
             Dear Valued User,
           </p>
           <p style="font-size: 16px; color: #555;">
-            We’re pleased to confirm that your recent transfer to your <strong>Intel AI wallet</strong> was successful.
+            We're pleased to confirm that your recent transfer to your <strong>Intel AI wallet</strong> was successful.
           </p>
           <p style="font-size: 16px; color: #555;">
             The amount has been securely received and is now ready for our AI agent to begin <strong>smart, automated staking</strong> on your behalf.
@@ -362,20 +259,13 @@ export async function sendConfirmationEmail(userId: number, amount: string) {
 }
 
 // tells the user that te AI has staked.
-export async function sendStakingEmail(userId: number, amount: string) {
+export async function sendStakingEmail(email: string) {
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true },
-    });
+    const subject = "Intel AI Has Successfully Staked to Moola Market!";
 
-    if (user) {
-      const email = user.email;
-      const subject = "Intel AI Has Successfully Staked to Moola Market!";
-
-      const text = `Dear Valued User,
+    const text = `Dear Valued User,
       
-      We are excited to inform you that Intel AI has successfully staked ${amount} cUSD to Moola Market. 
+      We are excited to inform you that Intel AI has successfully staked to Moola Market. 
       Your trust and participation in our platform are truly appreciated.
       
       By staking, you contribute to a secure and thriving ecosystem while gaining exclusive 
@@ -386,7 +276,7 @@ export async function sendStakingEmail(userId: number, amount: string) {
       Best regards,  
       Intel AI Team`;
 
-      const html = `
+    const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
           <h2 style="color: #2c3e50;">Intel AI Has Successfully Staked to Moola Market!</h2>
           <p style="font-size: 16px; color: #555;">
@@ -411,12 +301,20 @@ export async function sendStakingEmail(userId: number, amount: string) {
         </div>
       `;
 
-      await sendEmail(email, subject, text, html);
-      console.log(`Email sent to ${email}`);
-    }
-
+    await sendEmail(email, subject, text, html);
+    await updateUserEmailedStatus(email);
+    console.log(`Email sent to ${email}`);
     console.log("Staking email sent to the user.");
   } catch (error) {
     console.log(error);
   }
+}
+
+//funtion to return only the emails of users who are not emailed frm an array of user addressses
+export async function getUnemailedUsers(userAddresses: string[]) {
+  const unemailedUsers = await prisma.user.findMany({
+    where: { address: { in: userAddresses }, emailed: false },
+    select: { email: true },
+  });
+  return unemailedUsers.map((user) => user.email);
 }

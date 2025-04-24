@@ -1,5 +1,5 @@
 export const intelContractAddress =
-  "0x137d84aF92BC35b9C2362dA9DD34b561b339cAf5";
+  "0x16c0DBe7Ac3a6F99C634b0ad843ec5DDd4FAa4F9";
 export const intelAbi =[
   {
     "inputs": [
@@ -158,6 +158,25 @@ export const intelAbi =[
       }
     ],
     "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "pool",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "Reallocated",
     "type": "event"
   },
   {
@@ -358,6 +377,19 @@ export const intelAbi =[
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_stakingPool",
+        "type": "address"
+      }
+    ],
+    "name": "reallocation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
