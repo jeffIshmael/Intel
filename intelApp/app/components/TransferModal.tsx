@@ -16,13 +16,12 @@ export default function TransferModal({
   address,
   userId,
   privKey,
-  stake,
+
 }: {
   address: string;
   userId: string;
-
   privKey: string;
-  stake: (amount: number, poolSpec: string, poolName: string) => Promise<void>;
+
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -49,7 +48,7 @@ export default function TransferModal({
 
   useEffect(() => {
     getUserBalance();
-  }, [address]);
+  }, [address, userBalance, userStake]);
 
   const handleContractStaking = async () => {
     try {

@@ -1,7 +1,6 @@
 // this folder contains cron jobs for the ai agent
 "use server";
 
-require("dotenv").config();
 import { privateKeyToAccount } from "viem/accounts";
 import { createWalletClient, http } from "viem";
 
@@ -9,6 +8,8 @@ import { intelContractAddress, intelAbi } from "@/Blockchain/intelContract";
 import { celo } from "viem/chains";
 import { publicClient } from "./config";
 import { getUnemailedUsers, sendStakingEmail } from "./functions";
+import dotenv from "dotenv";
+dotenv.config();
 
 const aiAgentPrivateKey = process.env.AI_AGENT_PRIVATE_KEY as `0x${string}`;
 if (!aiAgentPrivateKey) {

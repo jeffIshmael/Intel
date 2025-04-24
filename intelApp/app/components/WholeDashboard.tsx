@@ -90,7 +90,6 @@ const WholeDashboard = () => {
   const [isStaking, setIsStaking] = useState(false);
   const [unstaking, setUnstaking] = useState(false);
   const [amountStaked, setAmountStaked] = useState(0);
-  const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
   const [reason, setReason] = useState("");
   const [showReason, setShowReason] = useState(false);
   const [fetchingPool, setFetchingPool] = useState(false);
@@ -132,7 +131,8 @@ const WholeDashboard = () => {
     const poolToStake = stablecoinPools.filter(
       (pool) => pool.project.toLowerCase() !== "uniswap-v3"
     );
-    setBestAIStakingPool(poolToStake[0]);
+    // setBestAIStakingPool(poolToStake[0]);
+    console.log("Best AI Staking Pool:", poolToStake[0]);
     const getPool = async () => {
       try {
         setFetchingPool(true);
@@ -401,76 +401,7 @@ const WholeDashboard = () => {
     }
   };
 
-  const handleAIStaking = async (amount: number, poolName: string) => {
-    const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
-    const privateKey = user?.privateKey ?? "";
-    const signer = new ethers.Wallet(privateKey, provider);
-    try {
-      await approveCUSD(amount, signer);
-      const result = await stakeCUSD(amount, signer);
-      if (result) {
-        const transaction = await createTransaction(
-          user?.id ?? 0,
-          result.hash,
-          "You staked",
-          amount
-        );
-        console.log(transaction);
-
-        toast.success(
-          <div className="flex items-center space-x-4">
-            {/* Icon for visual appeal */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-green-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-
-            {/* Main Content */}
-            <div>
-              <p className="text-sm font-medium text-gray-800">
-                Successfully staked {amount} cUSD to {poolName}.
-              </p>
-              <p className="text-sm text-gray-600">
-                <a
-                  href={`https://celoscan.io/tx/${result.hash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 underline hover:text-blue-600 transition-colors"
-                >
-                  Explore on CeloScan
-                </a>
-              </p>
-            </div>
-          </div>,
-          {
-            className: "bg-white shadow-md rounded-lg p-4 max-w-sm",
-            style: {
-              borderLeft: "4px solid #34C759", // Green border for success
-            },
-            duration: 5000,
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Staking failed:", error);
-      toast.error("Unable to stake.", {
-        description: "Make sure you have enough gas.",
-      });
-      setIsStaking(false);
-    } finally {
-      setIsStaking(false);
-    }
-  };
+ 
   // Copy wallet address
   const copyToClipboard = () => {
     const address = user?.address || "";
@@ -686,7 +617,6 @@ const WholeDashboard = () => {
             address={user?.address ?? ""}
             userId={(user?.id ?? "defaultId").toString()}
             privKey={user?.privateKey ?? ""}
-            stake={handleAIStaking}
           />
           {/* staked pool section */}
           <div className="bg-gray-700 text-white p-6 rounded-lg shadow-lg w-full max-w-md mx-auto">
