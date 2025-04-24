@@ -24,7 +24,6 @@
     "next-auth": "^4.24.11",
     "nodemailer": "^6.10.0",
     "openai": "^4.96.0",
-    "permissionless": "^0.2.43",
     "pino-pretty": "^13.0.0",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
