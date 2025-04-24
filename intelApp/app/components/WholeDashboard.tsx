@@ -12,18 +12,14 @@ import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
 import { ethers, Signer } from "ethers";
-import {
-  createTransaction,
-  updateStakedPool,
-  getCurrentStakedPool,
-  updateUnstaking,
-} from "@/lib/functions";
+import { createTransaction, getCurrentPool } from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
 import Link from "next/link";
 import { getBestPool } from "@/scripts/Nebula.mjs";
 import { getFallbackPool } from "@/lib/helperFunctions";
+import { getStake } from "@/lib/TokenTransfer";
 
 const contract = getContract({
   client,
@@ -71,7 +67,7 @@ interface User {
   email: string;
   passPhrase: string;
   address: string;
-  aiBalance: bigint;
+  emailed: boolean;
   staked: boolean;
   privateKey: string;
 }
@@ -87,13 +83,13 @@ const WholeDashboard = () => {
   const [poolToStake, setPoolToStake] = useState("");
   const [stakedPool, setStakedPool] = useState("");
   const [currentPool, setCurrentPool] = useState<Pool | null>(null);
-  const [amountStaked, setAmountStaked] = useState(0);
   const [fetching, setFetching] = useState(false);
   const [buttonText, setButtonText] = useState("");
   const [unstakingButtonText, setUnstakingButtonText] = useState("");
   const [stablecoinPoolspec, setstablecoinPoolspec] = useState("");
   const [isStaking, setIsStaking] = useState(false);
   const [unstaking, setUnstaking] = useState(false);
+  const [amountStaked, setAmountStaked] = useState(0);
   const [bestAIStakingPool, setBestAIStakingPool] = useState<Pool | null>(null);
   const [reason, setReason] = useState("");
   const [showReason, setShowReason] = useState(false);
@@ -105,63 +101,27 @@ const WholeDashboard = () => {
     params: [user?.address ?? ""], // type safe params
   });
 
-  async function fetchUser(userId: number) {
-    const user = await getUser(userId);
-    if (user) {
-      setUser(user);
-      const result = await getCurrentStakedPool(userId);
-      console.log(`result of stakedpool: ${result}.`)
-      if (result) {
-        setStakedPool(result.poolSpec);
-        setAmountStaked(Number(result.amountStaked));
-      }
-    }
-  }
-
   useEffect(() => {
     if (session?.user?.id) {
       fetchUser(Number(session.user.id));
     }
   }, [session]);
 
-  useEffect(() => {
-    const fetchPools = async () => {
-      try {
-        setFetching(true);
-        const response = await fetch("/api/pools", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await response.json();
-
-        if (data) {
-          // Update pools and best pools
-          setStablecoinPools(data.cUSDStableCoins);
-          // setBestPool(data.bestCUSDPool);
-
-          // Find the current pool based on `stakedPool`
-          const currentPoolFromData = data.cUSDStableCoins.find(
-            (pool: Pool) => pool.pool === stakedPool
-          );
-          console.log(`current pool from the received pools:${currentPoolFromData}.`);
-          if (currentPoolFromData) {
-            setCurrentPool(currentPoolFromData);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching pools:", error);
-      } finally {
-        setFetching(false);
+  async function fetchUser(userId: number) {
+    const user = await getUser(userId);
+    if (user) {
+      setUser(user);
+      const userStake = await getStake(user.address);
+      const result = await getCurrentPool();
+      console.log(`result of stakedpool: ${result}.`);
+      if (result) {
+        setStakedPool(result.poolSpec);
       }
-    };
-
-    // Only fetch pools when `user?.id` or `stakedPool` changes
-    if (user?.id || stakedPool) {
-      fetchPools();
+      if (userStake) {
+        setAmountStaked(Number(userStake));
+      }
     }
-  }, [user, stakedPool]);
+  }
 
   //fetching best pool according to AI
   useEffect(() => {
@@ -209,6 +169,47 @@ const WholeDashboard = () => {
 
     getPool();
   }, [stablecoinPools]);
+
+  useEffect(() => {
+    const fetchPools = async () => {
+      try {
+        setFetching(true);
+        const response = await fetch("/api/pools", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+
+        if (data) {
+          // Update pools and best pools
+          setStablecoinPools(data.cUSDStableCoins);
+          // setBestPool(data.bestCUSDPool);
+
+          // Find the current pool based on `stakedPool`
+          const currentPoolFromData = data.cUSDStableCoins.find(
+            (pool: Pool) => pool.pool === stakedPool
+          );
+          console.log(
+            `current pool from the received pools:${currentPoolFromData}.`
+          );
+          if (currentPoolFromData) {
+            setCurrentPool(currentPoolFromData);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching pools:", error);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    // Only fetch pools when `user?.id` or `stakedPool` changes
+    if (user?.id || stakedPool) {
+      fetchPools();
+    }
+  }, [user, stakedPool]);
 
   //function to approve cUSD sending to a pool
   const approveCUSD = async (amount: number, signer: Signer) => {
@@ -344,11 +345,7 @@ const WholeDashboard = () => {
         );
         console.log(transaction);
         console.log(pool);
-        await updateStakedPool(
-          user?.id ?? 0,
-          stablecoinPoolspec,
-          BigInt(amount * 10 ** 18)
-        );
+
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -404,11 +401,7 @@ const WholeDashboard = () => {
     }
   };
 
-  const handleAIStaking = async (
-    amount: number,
-    poolSpec: string,
-    poolName: string
-  ) => {
+  const handleAIStaking = async (amount: number, poolName: string) => {
     const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
     const privateKey = user?.privateKey ?? "";
     const signer = new ethers.Wallet(privateKey, provider);
@@ -423,11 +416,7 @@ const WholeDashboard = () => {
           amount
         );
         console.log(transaction);
-        await updateStakedPool(
-          user?.id ?? 0,
-          poolSpec,
-          BigInt(amount * 10 ** 18)
-        );
+
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -509,7 +498,6 @@ const WholeDashboard = () => {
           amount
         );
         console.log(transaction);
-        await updateUnstaking(user?.id ?? 0);
         toast.success(
           <div className="flex items-center space-x-4">
             {/* Icon for visual appeal */}
@@ -695,12 +683,8 @@ const WholeDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* wallet section */}
           <TransferModal
-            balance={Number(balance) / 10 ** 18}
-            aiBalance={Number(user?.aiBalance ?? 0)}
             address={user?.address ?? ""}
             userId={(user?.id ?? "defaultId").toString()}
-            poolSpec={bestAIStakingPool?.pool ?? ""}
-            poolName={bestAIStakingPool?.project ?? ""}
             privKey={user?.privateKey ?? ""}
             stake={handleAIStaking}
           />

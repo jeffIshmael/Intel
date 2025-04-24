@@ -9,6 +9,7 @@ import {
   queryContract,
 } from "@/scripts/Nebula.mjs";
 import cUSDAbi from "@/Blockchain/erc20.json";
+import { formatEther } from "viem";
 
 // cUSD Contract Address on Celo (used to pay gas fees)
 const cUSDAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a"; // cUSD token contract
@@ -225,7 +226,16 @@ export async function sendcUSD(
   }
 }
 
-
+// function to get cUSD balance of a user
+export async function getBalance(address: `0x${string}`) {
+  const balance = await publicClient.readContract({
+    address: cUSDAddress,
+    abi: cUSDAbi,
+    functionName: "balanceOf",
+    args: [address],
+  });
+  return formatEther(balance as bigint);
+}
 
 
 
