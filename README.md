@@ -61,7 +61,7 @@ The primary objectives of Intel are:
 
 ## Intel architecture
 
-<img src="./architecture.png" alt="Architecture" width="100">
+<img src="./architecture.png" alt="Architecture" width="100%">
 
 ## How Intel works
 
@@ -99,7 +99,7 @@ The primary objectives of Intel are:
 
 **Enhanced UI/UX for a Superior User Experience**
 
-- Refining the platform’s interface and interactions to deliver a more intuitive and engaging experience, ensuring smooth navigation and improved accessibility for all users
+- Refining the platform's interface and interactions to deliver a more intuitive and engaging experience, ensuring smooth navigation and improved accessibility for all users
 
 ## Demo
 
