@@ -94,12 +94,13 @@ export default function Home() {
           },
         });
         const data = await response.json();
-        console.log(data);
+
         if (data) {
           setStablecoinPools(data.cUSDStableCoins);
           setFetching(false);
         }
       } catch (error) {
+      
         setFetching(false);
         console.log(error);
       } finally {

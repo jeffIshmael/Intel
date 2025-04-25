@@ -3,7 +3,7 @@
 "use server";
 
 const cron = require("node-cron");
-import { getCurrentPool } from "../lib/functions";
+import { getCurrentPool, updatePool } from "../lib/functions";
 import { getBestPool as getBestPoolFromNebula } from "@/scripts/Nebula.mjs";
 
 interface Pool {
@@ -113,31 +113,31 @@ const getBestPool = async () => {
 
 // function to reallocate the funds to the best pool
 const reallocateFunds = async (poolSpec: string) => {
-    console.log("Reallocating funds to:", poolSpec);
-    // add the blockchain fnctn here
-}
-
+  console.log("Reallocating funds to:", poolSpec);
+  // add the blockchain fnctn here
+};
 
 // function to check for the best pool and reallocate the funds to the best pool
 const checkForBestPool = async () => {
-    try {
-        const currentPool = await getCurrentPool();
-        const bestPool = await getBestPool();
-        if(!currentPool || !bestPool) return;
-        if(currentPool.poolSpec !== bestPool.id) {
-            await reallocateFunds(currentPool.poolSpec);
-        }
-    } catch (error) {
-        console.log("Error checking for best pool:", error);
+  try {
+    const currentPool = await getCurrentPool();
+    const bestPool = await getBestPool();
+    if (!currentPool.poolSpec || !bestPool) return;
+    if (bestPool.name.toLowerCase() === "uniswap-v3") return;
+    if (currentPool.poolSpec !== bestPool.id) {
+      await updatePool(bestPool.id, bestPool.name);
+      await reallocateFunds(currentPool.poolSpec);
     }
-}
+  } catch (error) {
+    console.log("Error checking for best pool:", error);
+  }
+};
 
 // function to run the cron job
 const runCronJob = async () => {
-    console.log("Running cron job...", new Date().toISOString());
-    await checkForBestPool();
-}
+  console.log("Running cron job...", new Date().toISOString());
+  await checkForBestPool();
+};
 
-// run the cron job every 10 minutes
-cron.schedule("*/10 * * * *", runCronJob);
-
+// run the cron job every 5 minutes
+cron.schedule("*/5 * * * *", runCronJob);

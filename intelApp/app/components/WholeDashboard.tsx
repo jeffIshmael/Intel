@@ -12,7 +12,7 @@ import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
 import { ethers, Signer } from "ethers";
-import { createTransaction, getCurrentPool } from "@/lib/functions";
+import { createTransaction, getCurrentPool, updatePool } from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
@@ -401,7 +401,6 @@ const WholeDashboard = () => {
     }
   };
 
- 
   // Copy wallet address
   const copyToClipboard = () => {
     const address = user?.address || "";
@@ -415,6 +414,10 @@ const WholeDashboard = () => {
 
   //function to handle unstaking
   const handleUnstaking = async (amount: number, poolName: string) => {
+    if (poolName) {
+      toast("Unstaking under development...");
+      return;
+    }
     const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
     const privateKey = user?.privateKey ?? "";
     const signer = new ethers.Wallet(privateKey, provider);

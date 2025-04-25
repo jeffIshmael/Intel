@@ -29,12 +29,17 @@ export async function getUser(userId: number) {
 
 //function to get the current  pool
 export async function getCurrentPool() {
-  const pool = await prisma.pool.findMany();
+  const pool = await prisma.pool.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 1,
+  });
   return pool[0];
 }
 
 //function to create/update a staked pool
-export async function updatePool(poolIdentifier: string) {
+export async function updatePool(poolIdentifier: string, poolName: string) {
   // Check if its the same pool
   const existingPool = await prisma.pool.findFirst({
     where: {
@@ -46,13 +51,10 @@ export async function updatePool(poolIdentifier: string) {
     console.log(`Current Pool: ${existingPool.name}`);
     return;
   }
-  console.log(
-    "User has no active staked pool with this identifier. Creating a new one..."
-  );
 
   await prisma.pool.create({
     data: {
-      name: "New AI Staking Pool",
+      name: poolName,
       poolSpec: poolIdentifier,
     },
   });
