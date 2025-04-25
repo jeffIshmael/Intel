@@ -12,7 +12,7 @@ import { getContract } from "thirdweb";
 import { celo } from "thirdweb/chains";
 import { client } from "@/client/client";
 import { ethers, Signer } from "ethers";
-import { createTransaction, getCurrentPool, updatePool } from "@/lib/functions";
+import { createTransaction, getCurrentPool} from "@/lib/functions";
 import { toast } from "sonner";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { IoExitOutline } from "react-icons/io5";
