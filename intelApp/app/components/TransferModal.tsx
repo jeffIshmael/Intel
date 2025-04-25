@@ -42,7 +42,6 @@ export default function TransferModal({
       setUserStake(Number(aiBalance));
     } catch (error) {
       console.error("Error fetching balances:", error);
-      toast.error("Failed to refresh balances");
     }
   };
 
